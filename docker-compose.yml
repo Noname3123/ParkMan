@@ -1,0 +1,140 @@
+version: '3'
+
+services:
+  manager_app:
+    container_name: manager_app
+    build:
+      context: ./ManagerApp
+      dockerfile: app.dockerfile
+    networks:
+      - app-network
+
+
+
+    depends_on:
+      mongo_manager_db_service:
+        condition: service_healthy
+      mongo_user_db_service:
+        condition: service_healthy
+    env_file:
+      - ./ManagerApp/.env
+      - ./mongoDB/.env.shared.ManagerApp
+  traefik:
+    image: traefik:v3.1
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --accesslog=true
+      - --api=true
+      - --api.dashboard=true
+      - --api.insecure=true
+    ports:
+      - 8001:80
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-network
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: nginx.dockerfile
+    depends_on:
+      - manager_app
+    networks:
+      - app-network
+    ports:
+      - 80:80
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nginx.rule= Host(`parkman.localhost`)
+      - traefik.http.routers.nginx.entrypoints=web
+      - traefik.http.services.nginx.loadbalancer.server.port=80
+  mongo_manager_db_service:
+    build: ./mongoDB
+    env_file:
+      - ./mongoDB/.env.shared.express.ManagerDB
+      - ./mongoDB/.env.shared.ManagerApp
+      - ./mongoDB/.ManagerDB.env
+    ports:
+      - ${MONGO_PORT_MANAGERDB}:27017
+    volumes:
+      - mongo_data_managerDB:/data/db
+    command:
+      - mongod
+      - --bind_ip_all
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --eval
+        - 'db.getMongo().getDB(process.env.MONGO_DATABASE_NAME) ? quit(0) : quit(1)'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  mongo_user_db_service:
+    build: ./mongoDB
+    env_file:
+      - ./mongoDB/.env.shared.express.UserDB
+      - ./mongoDB/.env.shared.MobileApp
+      - ./mongoDB/.UserDB.env
+    ports:
+      - ${MONGO_PORT_USERDB}:27017
+    volumes:
+      - mongo_data_userDB:/data/db
+    command:
+      - mongod
+      - --bind_ip_all
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --eval
+        - 'db.getMongo().getDB(process.env.MONGO_DATABASE_NAME) ? quit(0) : quit(1)'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  mongo-express:
+    image: mongo-express
+    container_name: mexpress
+    env_file:
+      - ./mongoDB/.env.express.ManagerDB
+      - ./mongoDB/.env.shared.express.ManagerDB
+    restart: unless-stopped
+    ports:
+      - ${MONGO_EXPRESS_PORT_MANAGERDB}:8081
+    depends_on:
+      mongo_manager_db_service:
+        condition: service_healthy
+      mongo_user_db_service:
+        condition: service_healthy
+    networks:
+      - app-network
+  mongo-express_userDB:
+    image: mongo-express
+    container_name: mexpress_userDB
+    env_file:
+      - ./mongoDB/.env.express.UserDB
+      - ./mongoDB/.env.shared.express.UserDB
+    restart: unless-stopped
+    ports:
+      - ${MONGO_EXPRESS_PORT_USERDB}:8081
+    depends_on:
+      mongo_manager_db_service:
+        condition: service_healthy
+      mongo_user_db_service:
+        condition: service_healthy
+    networks:
+      - app-network
+networks:
+  app-network:
+    driver: bridge  # Use the default bridge network driver
+
+volumes:
+  mongo_data_managerDB: {}
+  mongo_data_userDB: {}
