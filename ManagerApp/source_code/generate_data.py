@@ -30,7 +30,7 @@ def post_data(url, data_list):
             print(f'Failed to post to {url}: {data}, Status Code: {response.status_code}')
 
 if __name__ == "__main__":
-    base_url_user = 'http://localhost:5001/user'
+    base_url_user = 'http://localhost:5001/user' #NOTE: have to change this to the correct port of server
     base_url_leader = 'http://localhost:5000/leader'
 
     users = generate_users(10)

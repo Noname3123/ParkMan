@@ -131,6 +131,13 @@ services:
         condition: service_healthy
     networks:
       - app-network
+  mobile_app:
+    container_name: mobile_app
+    build:
+      context: ./MobileApp
+      dockerfile: app.dockerfile
+    networks:
+      - app-network
 networks:
   app-network:
     driver: bridge  # Use the default bridge network driver
