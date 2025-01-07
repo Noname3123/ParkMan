@@ -3,6 +3,8 @@ import requests
 
 fake = Faker()
 
+hostname='parkman.localhost' #NOTE: added hostname due to traefik communication rule Host(parkman.localhost - which is the name of nginx service in docker-compose)
+
 def generate_users(n):
     users = [{
         "username": fake.user_name(),
@@ -23,15 +25,15 @@ def generate_parks(n):
 
 def post_data(url, data_list):
     for data in data_list:
-        response = requests.post(url, json = data)
+        response = requests.post(url, json = data, headers={'Host': hostname}) #NOTE: added hostname due to traefik communication rule
         if response.status_code == 201:
             print(f'Successfully posted to {url}: {data}')
         else:
             print(f'Failed to post to {url}: {data}, Status Code: {response.status_code}')
 
 if __name__ == "__main__":
-    base_url_user = 'http://localhost:5001/user' #NOTE: have to change this to the correct port of server
-    base_url_leader = 'http://localhost:5000/leader'
+    base_url_user = 'http://localhost:8001/user' #NOTE: have to change this to the correct port of server
+    base_url_leader = 'http://localhost:8001/api'
 
     users = generate_users(10)
     parks = generate_parks(10)
