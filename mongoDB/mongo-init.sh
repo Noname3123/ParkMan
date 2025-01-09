@@ -8,6 +8,7 @@ set -e
 : "${MONGO_DATABASE_PASS:?Environment variable MONGO_DATABASE_PASS not set}"
 : "${MONGO_INITDB_ROOT_USERNAME:?Environment variable MONGO_INITDB_ROOT_USERNAME not set}"
 : "${MONGO_INITDB_ROOT_PASSWORD:?Environment variable MONGO_INITDB_ROOT_PASSWORD not set}"
+: "${MONGO_COLLECTION_NAMES:?Environment variable MONGO_COLLECTION_NAMES not set}"
 
 echo "Starting MongoDB initialization script..."
 
@@ -27,6 +28,19 @@ if (!user) {
 } else {
     print("User '$MONGO_DATABASE_USER' already exists on '$MONGO_DATABASE_NAME'.");
 }
+EOF
+
+# Initialize collections if they don't exist
+mongosh "$MONGO_DATABASE_NAME" -u "$MONGO_DATABASE_USER" -p "$MONGO_DATABASE_PASS" --authenticationDatabase "$MONGO_DATABASE_NAME" <<EOF
+var collections = $MONGO_COLLECTION_NAMES;
+collections.forEach(function(collection) {
+  if (db.getCollectionNames().indexOf(collection) === -1) {
+  db.createCollection(collection);
+  print("Collection '" + collection + "' created successfully in database '$MONGO_DATABASE_NAME'.");
+  } else {
+  print("Collection '" + collection + "' already exists in database '$MONGO_DATABASE_NAME'.");
+  }
+});
 EOF
 
 echo "MongoDB initialization complete."
