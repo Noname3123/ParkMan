@@ -16,9 +16,12 @@ services:
         condition: service_healthy
       mongo_user_db_service:
         condition: service_healthy
+      park_transactions_db:
+        condition: service_healthy
     env_file:
       - ./ManagerApp/.env
       - ./mongoDB/.env.shared.ManagerApp
+      - ./timescaleDB/.env.shared.ManagerApp
   traefik:
     image: traefik:v3.1
     command:
@@ -138,6 +141,24 @@ services:
       dockerfile: app.dockerfile
     networks:
       - app-network
+  park_transactions_db:
+    build: ./timescaleDB
+    restart: always
+    ports:
+      - ${TIMESCALEDB_PORT}:5432
+    env_file:
+      - ./timescaleDB/.env.shared.ManagerApp
+    volumes:
+      - timescaleDB:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready
+      interval: 30s
+      timeout: 10s
+      retries: 5
 networks:
   app-network:
     driver: bridge  # Use the default bridge network driver
@@ -145,3 +166,4 @@ networks:
 volumes:
   mongo_data_managerDB: {}
   mongo_data_userDB: {}
+  timescaleDB: {}
