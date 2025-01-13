@@ -1,2 +1,7 @@
 
 Flask
+requests
+pymongo
+python-dotenv
+psycopg2
+datetime
