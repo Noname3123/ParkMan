@@ -18,10 +18,13 @@ services:
         condition: service_healthy
       park_transactions_db:
         condition: service_healthy
+      redis_parking_spots_status:
+        condition: service_healthy
     env_file:
       - ./ManagerApp/.env
       - ./mongoDB/.env.shared.ManagerApp
       - ./timescaleDB/.env.shared.ManagerApp
+      - ./redis/.env.shared.ManagerApp.MobileApp
   traefik:
     image: traefik:v3.1
     command:
@@ -45,6 +48,7 @@ services:
       dockerfile: nginx.dockerfile
     depends_on:
       - manager_app
+      - mobile_app
     networks:
       - app-network
     ports:
@@ -141,6 +145,18 @@ services:
       dockerfile: app.dockerfile
     networks:
       - app-network
+    depends_on:
+      redis_parking_spots_status:
+        condition: service_healthy
+      mongo_user_db_service:
+        condition: service_healthy
+      park_transactions_db:
+        condition: service_healthy
+    env_file:
+      - ./redis/.env.shared.ManagerApp.MobileApp
+      - ./MobileApp/.env
+      - ./mongoDB/.env.shared.MobileApp
+      - ./timescaleDB/.env.shared.MobileApp
   park_transactions_db:
     build: ./timescaleDB
     restart: always
@@ -159,6 +175,25 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+  redis_parking_spots_status:
+    build: ./redis
+    restart: always
+    ports:
+      - ${REDIS_PORT}:6379
+    env_file:
+      - ./redis/.env.shared.ManagerApp.MobileApp
+    volumes:
+      - redis_DB_parking_spot_status:/data
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
 networks:
   app-network:
     driver: bridge  # Use the default bridge network driver
@@ -167,3 +202,4 @@ volumes:
   mongo_data_managerDB: {}
   mongo_data_userDB: {}
   timescaleDB: {}
+  redis_DB_parking_spot_status: {}

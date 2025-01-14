@@ -9,12 +9,9 @@ load_dotenv()
 
 app = Flask(__name__)
 
-TIMESCALE_DB_URI = os.getenv("TIMESCALE_DB_URI", "Paste the URI here")
 
-timescale_conn = connect(TIMESCALE_DB_URI)
-timescale_cursor = timescale_conn.cursor(cursor_factory = RealDictCursor)
 
-configure_routes(app, timescale_conn) #NOTE: url prefix is /user
+configure_routes(app) #NOTE: url prefix is /user
 
 if __name__ == "__main__":
     app.run(debug = True, host="0.0.0.0", port=80)

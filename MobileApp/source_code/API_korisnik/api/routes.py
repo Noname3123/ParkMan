@@ -2,9 +2,11 @@ from flask import request, jsonify, Blueprint
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+from psycopg2.extras import RealDictCursor
+from psycopg2 import connect
 import random
 from datetime import datetime
-from app import timescale_conn
+#from app import timescale_conn #from app import timescale_conn causes circular import issues
 
 user_api = Blueprint('user_api', __name__)
 
@@ -25,7 +27,10 @@ users_collection = db.users
 parks_collection = db.parks
 
 #TimescaleDB Configuration
-timescale_cursor = timescale_conn.cursor()
+TIMESCALE_DB_URI = os.getenv("TIMESCALE_DB_DATABASE_URI", "postgresql://postgres_user:postgres_pass@park_transactions_db:5432/ParkingTransactionsDB")
+
+timescale_conn = connect(TIMESCALE_DB_URI)
+timescale_cursor = timescale_conn.cursor(cursor_factory = RealDictCursor)
 
 #----------------------------------------------------------------------------------------------------
 #   User Registration and Login
