@@ -3,3 +3,6 @@ Flask
 requests
 python-dotenv
 pymongo
+
+datetime
+faker

@@ -9,8 +9,6 @@ load_dotenv()
 
 app = Flask(__name__)
 
-
-
 configure_routes(app) #NOTE: url prefix is /user
 
 if __name__ == "__main__":
