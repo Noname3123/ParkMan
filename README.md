@@ -1,3 +1,7 @@
+Napomena: oznake označene sa *italic* su novo dodane, oznake koje su **podebljane** su implementirane
+
+------
+
 Naziv projekta: ParkMan
 
 Članovi tima: Damjan Đekić, Benjamin Jakupović
@@ -12,17 +16,19 @@ Aplikacija se sastoji od 3 dijela:
 
 Dva tipa korisnika će koristiti aplikaciju: voditelj, osoba koja parkira
 
-Faza1:
+# Faza1:
 
 Aplikacija će biti skalabilna te se sastojati od web servera, loadbalancera, NoSQL baze za voditelja, parkove i njihova parking mjesta te NoSQL baze koja zapisuje trenutna stanja parkinga. Dodaje se i API koji će simulirati mobilnu aplikaciju.
+
+*Također će postojati i SQL baza koja sprema transakcijske podatke te pomoću njih računa trajanje parkinga i određuje cijenu.*
 
  
 
 Implementira web aplikaciju za voditelja:
 
-·        Ima pristup web aplikaciji u kojoj se definiraju parkovi za parking
+·        Ima pristup web aplikaciji u kojoj se definiraju parkovi za parking **(samo simulirano s pozivima API-a)**
 
-·        može definirati nove parkove za parking (njihovu lokaciju u svijetu, naziv) i za tu lokaciju definirati koliko mjesta postoji, i definirati cijenu za to parking mjesto (po defaultu su cijene za sva mjesta jednaka).
+·        **može definirati nove parkove za parking (njihovu lokaciju u svijetu, naziv) i za tu lokaciju definirati koliko mjesta postoji, i definirati cijenu za to parking mjesto (po defaultu su cijene za sva mjesta jednaka).**
 
 Funkcionalnosti ovog dijela aplikacije će biti simulirane API pozivima, kojima se prosljeđuje odgovarajući JSON dokument u zahtjevu.
 
@@ -30,13 +36,13 @@ Funkcionalnosti ovog dijela aplikacije će biti simulirane API pozivima, kojima 
 
 „Implementira“ mobilnu aplikaciju za osobu koja parkira (mobilna aplikacija simulirana sa API pozivima):
 
-·        Vide listu parkinga svih voditelja te mogu izabrati parking po nazivu ili se izabere onaj najbliži njihovoj GPS lokaciji
+·        **Vide listu parkinga svih voditelja te mogu izabrati parking po nazivu** ili se izabere onaj najbliži njihovoj GPS lokaciji
 
-·        Korisnik stvara account za aplikaciju
+·        **Korisnik stvara account za aplikaciju**
 
-·        Za svaki parking vide trenutno stanje (koliko slobodnih mjesta)
+·        Za svaki parking vide trenutno stanje (koliko slobodnih mjesta) *(nije implementirano u ovoj fazi)*
 
-·        Imaju pristup rampi. Pomoću aplikacije (ako su u blizini rampe), zatraže parking, dodaje se njihov zapis u bazu (timestamp), primaju svoj kod i baza se otvara
+·        **Imaju pristup rampi. Pomoću aplikacije (ako su u blizini rampe), zatraže parking, dodaje se njihov zapis u bazu (timestamp)**, primaju svoj kod i baza se otvara *(postupak dodavanja koda nije potpuno implementiran - ovisi o mobilnoj aplikaciji)*
 
 ·        Prilikom dolaska do mjesta za izlaz, skeniraju svoj kod s mobitela, brišu se iz baze te se računa cijena koju je potrebno platiti
 
@@ -52,7 +58,7 @@ Funkcionalnosti ovog dijela aplikacije će biti simulirane API pozivima, kojima 
 
  
 
-Faza 2:
+# Faza 2:
 
 Proširenje faze 1, dodaje se SQL baza, koja se koristi za analitiku. Također se dodaju nove funkcionalnosti za voditelja te izvodi batch processing za podatke o parkingu.
 
