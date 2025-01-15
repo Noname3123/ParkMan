@@ -60,10 +60,12 @@ services:
       - traefik.http.services.nginx.loadbalancer.server.port=80
   mongo_manager_db_service:
     build: ./mongoDB
+    container_name: mongo_manager_db_service
     env_file:
       - ./mongoDB/.env.shared.express.ManagerDB
       - ./mongoDB/.env.shared.ManagerApp
       - ./mongoDB/.ManagerDB.env
+      - ./mongoDB/.ManagerDB.UserDB.env.shared
     ports:
       - ${MONGO_PORT_MANAGERDB}:27017
     volumes:
@@ -84,10 +86,12 @@ services:
       retries: 5
   mongo_user_db_service:
     build: ./mongoDB
+    container_name: mongo_user_db_service
     env_file:
       - ./mongoDB/.env.shared.express.UserDB
       - ./mongoDB/.env.shared.MobileApp
       - ./mongoDB/.UserDB.env
+      - ./mongoDB/.ManagerDB.UserDB.env.shared
     ports:
       - ${MONGO_PORT_USERDB}:27017
     volumes:
@@ -172,6 +176,11 @@ services:
       test:
         - CMD-SHELL
         - pg_isready
+        - -U
+        - postgres_user
+        - -d
+        - ParkingTransactionsDB
+
       interval: 30s
       timeout: 10s
       retries: 5

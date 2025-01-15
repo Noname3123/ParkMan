@@ -7,6 +7,7 @@ set -e
 : "${POSTGRES_USER:?Environment variable POSTGRES_USER not set}"
 : "${POSTGRES_DB:?Environment variable POSTGRES_DB not set}"
 : "${POSTGRES_HOST:?Environment variable POSTGRES_HOST not set}"
+: "${POSTGRES_PASSWORD:?Environment variable POSTGRES_PASSWORD not set}"
 
 
 
@@ -17,9 +18,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER"  --dbname "$POSTGRES_DB"<<-E
   CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
   -- Create the ParkingTransactions table
   CREATE TABLE ParkingTransactions (
-    parking_lot_id    INT             NOT NULL,
+    parking_lot_id    TEXT             NOT NULL,
     parking_spot_id   INT             NOT NULL,
-    user_id           INT             NOT NULL,
+    user_id           TEXT             NOT NULL,
     entry_timestamp   TIMESTAMPTZ     NOT NULL,
     exit_timestamp    TIMESTAMPTZ     NULL,
     checkout_price    NUMERIC(10, 2)  NULL

@@ -6,6 +6,7 @@ from psycopg2.extras import RealDictCursor
 from psycopg2 import connect
 import random
 from datetime import datetime
+from bson import ObjectId
 #from app import timescale_conn #from app import timescale_conn causes circular import issues
 
 user_api = Blueprint('user_api', __name__)
@@ -18,16 +19,21 @@ user_api = Blueprint('user_api', __name__)
 load_dotenv()
 
 #MongoDB Configuration
-MONGO_URI = os.getenv("MONGODB_URI", "mongodb://user_Person:mongo_pass@mongo_user_db_service:27017/ParkMan_user_db")
+MONGO_URI = os.getenv("MONGO_USER_DATABASE_URI", "mongodb://user_Person:mongo_pass@mongo_user_db_service:27017/ParkMan_user_db")
 client = MongoClient(MONGO_URI)
 db = client.get_database()
 
+MONGO_EXTERNAL=os.getenv("MONGO_MANAGER_DATABASE_R_ONLY_URI", "mongodb://external:external_pass@localhost:27017/ParkMan_manager_db")
+external_client=MongoClient(MONGO_EXTERNAL)
+db_external=external_client.get_database()
+
+
 #MongoDB Collections
 users_collection = db.users
-parks_collection = db.parks
+parks_collection = db_external.parking_lots #parking lot collection
 
 #TimescaleDB Configuration
-TIMESCALE_DB_URI = os.getenv("TIMESCALE_DB_DATABASE_URI", "postgresql://postgres_user:postgres_pass@park_transactions_db:5432/ParkingTransactionsDB")
+TIMESCALE_DB_URI = os.getenv("TIMESCALE_DB_DATABASE_URI", "postgresql://postgres_user:postgres_pass@localhost:5432/ParkingTransactionsDB")
 
 timescale_conn = connect(TIMESCALE_DB_URI)
 timescale_cursor = timescale_conn.cursor(cursor_factory = RealDictCursor)
@@ -69,7 +75,7 @@ def login():
 #----------------------------------------------------------------------------------------------------
     
 @user_api.route('/parks', methods = ['GET'])
-def get_parks():
+def get_parks(): #TODO: this should be used as get closest park to user's location
     parks = list(parks_collection.find({}, {"_id": 0})) #{"_id: 0"} - Exclude the ID of the owner when outputing results
     return jsonify(parks)
 
@@ -77,19 +83,20 @@ def get_parks():
 def reserve():
     data = request.get_json()
     reservation_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
-
-    park = parks_collection.find_one({"id": data['park_id'], "available_spots": {"$gt": 0}})
-    if park:
+    
+    #park = parks_collection.find_one({"id": data['park_id'], "available_spots": {"$gt": 0}}) #TODO: available spots are not part of MongoDB (Key-valueDB)
+    #TODO: add check whether parking lot (data["id_parking_lot"]) is free and exists in MongoDB - phase 2
+    if True and parks_collection.find_one({"_id": ObjectId(data["id_parking_lot"])}):
         #Update the available spots in the park
-        parks_collection.update_one({"id": data['park_id']}, {"$inc": {"available_spots": -1}})
+        #parks_collection.update_one({"id": data['park_id']}, {"$inc": {"available_spots": -1}}) - ##TODO: KeyValueDB - sensors do this
         #Insert reservation into TimescaleDB
         timescale_cursor.execute("""
-            INSERT INTO TimestampDB (id_parking_lot, id_user, timestamp, id_parking_spot)
-            VALUES (%s, %s, NOW(), %s)
-        """, (data['park_id'], data['user_id'], data.get('id_parking_spot'))
+            INSERT INTO ParkingTransactions(parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp, checkout_price )
+            VALUES (%s, %s, %s, NOW(), %s, %s)
+        """, (data['id_parking_lot'],data.get('id_parking_spot') ,data['id_user'], None, None)
         )
         timescale_conn.commit()
-        return jsonify({"message": "Reservation successful", "code": reservation_code})
+        return jsonify({"message": "Reservation successful", "code": reservation_code}) #TODO: look how to use this - it will probably get sent to mobile app storage of user
     else:
         return jsonify({"message": "Reservation failed, no spots available"})
     
@@ -100,8 +107,8 @@ def checkout():
     #Retrieve the resertvation from TimescaleDB
     timescale_cursor.execute("""
         SELECT * FROM TimestampDB
-        WHERE id_parking_lot = %s AND id_user = %s AND leaving_timestamp IS NULL
-    """, (data['park_id'], data['user_id'])
+        WHERE parking_lot_id = %s AND user_id = %s AND exit_timestamp IS NULL
+    """, (data['id_parking_lot'], data['id_user'])
     )
     reservation = timescale_cursor.fetchone()
 
@@ -110,7 +117,7 @@ def checkout():
     
     #Calculate visit duration and cost
     entry_time = reservation['timestamp']
-    leave_time = datetime.utcnow()
+    leave_time = datetime.utcnow() #TODO: update since deprecated
     duration_hours = (leave_time - entry_time).total_seconds() / 3600
     duration_hours = max(1, int(duration_hours)) #Minimum payment is one hour
 
@@ -123,14 +130,14 @@ def checkout():
     #Updating TimestampDB record with leaving timestamp and cost
     timescale_cursor.execute("""
         UPDATE TimestampDB
-        SET leaving_timestamp = NOW(), checkout_price = %s
-        WHERE id_parking_lot = %s AND id_user = %s id_parking_spot = %s
-    """, (total_cost, data['park_id'], data['user_id'], reservation['id_parking_spot'])
+        SET exit_timestamp = NOW(), checkout_price = %s
+        WHERE parking_lot_id = %s AND user_id = %s parking_spot_id = %s
+    """, (total_cost, data['id_parking_lot'], data['id_user'], reservation['id_parking_spot'])
     )
     timescale_conn.commit()
 
-    #Increment available spots in MongoDB
-    parks_collection.update_one({"id": data['park_id']}, {"$inc": {"available_spots": 1}})
+    #TODO: Increment available spots in MongoDB - this is related to key-val DB - phase 2
+    ##parks_collection.update_one({"id": data['id_parking_lot']}, {"$inc": {"available_spots": 1}})
 
     return jsonify({
         "message": "Checkout successful",

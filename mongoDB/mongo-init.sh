@@ -9,6 +9,8 @@ set -e
 : "${MONGO_INITDB_ROOT_USERNAME:?Environment variable MONGO_INITDB_ROOT_USERNAME not set}"
 : "${MONGO_INITDB_ROOT_PASSWORD:?Environment variable MONGO_INITDB_ROOT_PASSWORD not set}"
 : "${MONGO_COLLECTION_NAMES:?Environment variable MONGO_COLLECTION_NAMES not set}"
+: "${MONGO_DATABASE_EXTERNAL_USER:?Environment variable MONGO_DATABASE_EXTERNAL_USER not set}"
+: "${MONGO_DATABASE_EXTERNAL_PASS:?Environment variable MONGO_DATABASE_EXTERNAL_PASS not set}"
 
 echo "Starting MongoDB initialization script..."
 
@@ -27,6 +29,21 @@ if (!user) {
     print("Application user '$MONGO_DATABASE_USER' created successfully on '$MONGO_DATABASE_NAME'.");
 } else {
     print("User '$MONGO_DATABASE_USER' already exists on '$MONGO_DATABASE_NAME'.");
+}
+#create user which can only read DB
+var external_user = db.getSiblingDB('$MONGO_DATABASE_NAME').getUser('$MONGO_DATABASE_EXTERNAL_USER');
+if (!external_user) {
+    // Create application database and user
+    db.getSiblingDB('$MONGO_DATABASE_NAME').createUser({
+      user: "$MONGO_DATABASE_EXTERNAL_USER",
+      pwd: "$MONGO_DATABASE_EXTERNAL_PASS",
+      roles: [
+        { role: "read", db: "$MONGO_DATABASE_NAME" }
+      ]
+    });
+    print("Application user '$MONGO_DATABASE_EXTERNAL_USER' created successfully on '$MONGO_DATABASE_NAME'.");
+} else {
+    print("User '$MONGO_DATABASE_EXTERNAL_USER' already exists on '$MONGO_DATABASE_NAME'.");
 }
 EOF
 
