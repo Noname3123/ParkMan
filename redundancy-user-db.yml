@@ -1,0 +1,251 @@
+version: '3'
+
+services:
+  configsvr1_userDB:
+    image: mongo:latest
+    hostname: configsvr1_userDB
+    command:
+      - mongod
+      - --replSet
+      - configReplSet
+      - --configsvr
+      - --port
+      - '27019'
+      - --dbpath
+      - /data/db
+      - --bind_ip_all
+    ports:
+      - 27049:27019
+    volumes:
+      - configsvr1_data_userDB:/data/db
+    networks:
+      - app-network
+    restart: always
+    links:
+      - shard1_1_userDB
+      - shard2_1_userDB
+  configsvr2_userDB:
+    image: mongo:latest
+    hostname: configsvr2_userDB
+    command:
+      - mongod
+      - --replSet
+      - configReplSet
+      - --configsvr
+      - --port
+      - '27019'
+      - --dbpath
+      - /data/db
+      - --bind_ip_all
+    ports:
+      - 27059:27019
+    volumes:
+      - configsvr2_data_userDB:/data/db
+    networks:
+      - app-network
+    restart: always
+    links:
+      - configsvr1_userDB
+  configsvr3_userDB:
+    image: mongo:latest
+    hostname: configsvr3_userDB
+    command:
+      - mongod
+      - --replSet
+      - configReplSet
+      - --configsvr
+      - --port
+      - '27019'
+      - --dbpath
+      - /data/db
+      - --bind_ip_all
+    ports:
+      - 27069:27019
+    volumes:
+      - configsvr3_data_userDB:/data/db
+    networks:
+      - app-network
+    restart: always
+    links:
+      - configsvr2_userDB
+  shard1_1_userDB:
+    image: mongo:latest
+    hostname: shard1_1_userDB
+    command:
+      - mongod
+      - --replSet
+      - shard1ReplSet
+      - --shardsvr
+      - --port
+      - '27018'
+      - --dbpath
+      - /data/db
+      - --bind_ip_all
+    ports:
+      - 27078:27018
+    volumes:
+      - shard1_1_data_userDB:/data/db
+    networks:
+      - app-network
+    restart: always
+    links:
+      - shard1_2_userDB
+      - shard1_3_userDB
+  shard1_2_userDB:
+    image: mongo:latest
+    hostname: shard1_2_userDB
+    command:
+      - mongod
+      - --replSet
+      - shard1ReplSet
+      - --shardsvr
+      - --port
+      - '27018'
+      - --dbpath
+      - /data/db
+      - --bind_ip_all
+    ports:
+      - 27088:27018
+    volumes:
+      - shard1_2_data_userDB:/data/db
+    networks:
+      - app-network
+    restart: always
+  shard1_3_userDB:
+    image: mongo:latest
+    hostname: shard1_3_userDB
+    command:
+      - mongod
+      - --replSet
+      - shard1ReplSet
+      - --shardsvr
+      - --port
+      - '27018'
+      - --dbpath
+      - /data/db
+      - --bind_ip_all
+    ports:
+      - 27098:27018
+    volumes:
+      - shard1_3_data_userDB:/data/db
+    networks:
+      - app-network
+    restart: always
+  shard2_1_userDB:
+    image: mongo:latest
+    hostname: shard2_1_userDB
+    command:
+      - mongod
+      - --replSet
+      - shard2ReplSet
+      - --shardsvr
+      - --port
+      - '27018'
+      - --dbpath
+      - /data/db
+      - --bind_ip_all
+    ports:
+      - 27108:27018
+    volumes:
+      - shard2_1_data_userDB:/data/db
+    networks:
+      - app-network
+    restart: always
+    links:
+      - shard2_2_userDB
+      - shard2_3_userDB
+  shard2_2_userDB:
+    image: mongo:latest
+    hostname: shard2_2_userDB
+    command:
+      - mongod
+      - --replSet
+      - shard2ReplSet
+      - --shardsvr
+      - --port
+      - '27018'
+      - --dbpath
+      - /data/db
+      - --bind_ip_all
+    ports:
+      - 27118:27018
+    volumes:
+      - shard2_2_data_userDB:/data/db
+    networks:
+      - app-network
+    restart: always
+  shard2_3_userDB:
+    image: mongo:latest
+    hostname: shard2_3_userDB
+    command:
+      - mongod
+      - --replSet
+      - shard2ReplSet
+      - --shardsvr
+      - --port
+      - '27018'
+      - --dbpath
+      - /data/db
+      - --bind_ip_all
+    ports:
+      - 27128:27018
+    volumes:
+      - shard2_3_data_userDB:/data/db
+    networks:
+      - app-network
+    restart: always
+  mongo_user_db_service:
+    build:
+      context: .
+      dockerfile: ./Partitioning_replication/UserMongoDB/UserDB.Router.Dockerfile
+    container_name: mongo_user_db_service
+    env_file:
+      - ./.env
+      - ./mongoDB/.env.shared.express.UserDB
+      - ./mongoDB/.env.shared.MobileApp
+      - ./mongoDB/.UserDB.env
+      - ./mongoDB/.ManagerDB.UserDB.env.shared
+    command:
+      - mongos
+      - --configdb
+      - configReplSet/configsvr1_userDB:27019,configsvr2_userDB:27019,configsvr3_userDB:27019
+      - --port
+      - '27017'
+      - --bind_ip_all
+    ports:
+      - ${MONGO_PORT_USERDB}:27017
+    restart: always
+    depends_on:
+      - configsvr1_userDB
+      - configsvr2_userDB
+      - configsvr3_userDB
+      - shard1_1_userDB
+      - shard1_2_userDB
+      - shard1_3_userDB
+      - shard2_1_userDB
+      - shard2_2_userDB
+      - shard2_3_userDB
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --eval
+        - db.adminCommand('ping')
+      interval: 30s
+      timeout: 10s
+      retries: '3'
+      start_period: 10s
+volumes:
+  configsvr1_data_userDB: {}
+  configsvr2_data_userDB: {}
+  configsvr3_data_userDB: {}
+  shard1_1_data_userDB: {}
+  shard1_2_data_userDB: {}
+  shard1_3_data_userDB: {}
+  shard2_1_data_userDB: {}
+  shard2_2_data_userDB: {}
+  shard2_3_data_userDB: {}
+
+

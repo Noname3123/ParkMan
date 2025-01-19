@@ -86,9 +86,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  mongo_user_db_service:
+  mongo_user_db_service_unpartitioned:
     build: ./mongoDB
-    container_name: mongo_user_db_service
+    container_name: mongo_user_db_service_unpartitioned
+    profiles:
+      - unpartitionedDB
     env_file:
       - ./mongoDB/.env.shared.express.UserDB
       - ./mongoDB/.env.shared.MobileApp
