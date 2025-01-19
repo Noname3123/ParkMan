@@ -27,6 +27,11 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER"  --dbname "$POSTGRES_DB"<<-E
     exit_timestamp    TIMESTAMPTZ     NULL,
     checkout_price    NUMERIC(10, 2)  NULL
   );
+  SELECT create_hypertable('ParkingTransactions', 'entry_timestamp');
+
+  CREATE INDEX ON ParkingTransactions (parking_lot_id); 
+  CREATE INDEX ON ParkingTransactions (user_id);
+
 EOSQL
 
 
