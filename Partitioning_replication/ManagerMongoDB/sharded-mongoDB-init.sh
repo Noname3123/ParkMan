@@ -69,12 +69,20 @@ echo "MongoDB initialization complete."
 
 
 echo "Begin sharding config for managerDB"
-
+#sharding for parking lots, parking lots - based on price and parking lot id (optimization for price queries), owners - based on owner id and parking lot array
 mongosh admin<< EOF
 sh.enableSharding('$MONGO_DATABASE_NAME');
 var db = db.getSiblingDB(dbName);
+
 db.parking_lots.createIndex({ geolocation: "2dsphere" });
 sh.shardCollection('{$MONGO_DATABASE_NAME}.parking_lots', { geolocation: "hashed" });
+
+db.parking_spaces.createIndex({ parking_lot: 1, spot_price: 1 });
+sh.shardCollection("{$MONGO_DATABASE_NAME}.parking_spaces", { parking_lot: "hashed" });
+
+db.owners.createIndex({ parking_lots: 1 });
+sh.shardCollection("managerDB.owners", { _id: "hashed", parking_lots: 1 });
+
 EOF
 
 echo "MongoDB mongos sharding setup complete."
