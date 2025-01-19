@@ -51,7 +51,8 @@ def register():
     user = {
         "name": data['name'],
         "surname": data['surname'],
-        "car_registration": data.get('car_registration', []) #Empty list for storing users car registration numbers
+        "car_registration": data.get('car_registration', []), #Empty list for storing users car registration numbers
+        "home_geolocation": data.get('home_geolocation'),
     }
 
     result = users_collection.insert_one(user)

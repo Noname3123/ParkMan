@@ -38,7 +38,7 @@ Funkcionalnosti ovog dijela aplikacije će biti simulirane API pozivima, kojima 
 
 ·        **Vide listu parkinga svih voditelja te mogu izabrati parking po nazivu** ili se izabere onaj najbliži njihovoj GPS lokaciji
 
-·        **Korisnik stvara account za aplikaciju**
+·        **Korisnik stvara account za aplikaciju (definira ime, prezime, registracijske oznake auta i "kućnu lokaciju")**
 
 ·        Za svaki parking vide trenutno stanje (koliko slobodnih mjesta) *(nije implementirano u ovoj fazi)*
 

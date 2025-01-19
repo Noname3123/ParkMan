@@ -18,7 +18,9 @@ def generate_users(n):
     users = [{
         "name": fake.first_name(),
         "surname": fake.last_name(),
-        "car_registration": [fake.license_plate() for _ in range(random.randint(1, 3))]
+        "car_registration": [fake.license_plate() for _ in range(random.randint(1, 3))],
+        "home_geolocation": [float(fake.latitude()), float(fake.longitude())], #changed to float - JSON doesnt support decimal format
+
     } for _ in range(n)]
     return users
 
