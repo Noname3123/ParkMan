@@ -17,8 +17,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER"  --dbname "$POSTGRES_DB"<<-E
   \c $POSTGRES_DB
   CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
   CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-  -- Create the ParkingTransactions table
-  CREATE TABLE ParkingTransactions (
+  -- Create the parking_transactions table
+  CREATE TABLE parking_transactions (
     transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     parking_lot_id    TEXT             NOT NULL,
     parking_spot_id   INT             ,
@@ -27,10 +27,19 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER"  --dbname "$POSTGRES_DB"<<-E
     exit_timestamp    TIMESTAMPTZ     NULL,
     checkout_price    NUMERIC(10, 2)  NULL
   );
-  SELECT create_hypertable('ParkingTransactions', 'entry_timestamp');
 
-  CREATE INDEX ON ParkingTransactions (parking_lot_id); 
-  CREATE INDEX ON ParkingTransactions (user_id);
+
+  CREATE UNIQUE INDEX ON parking_transactions (transaction_id, entry_timestamp);
+  
+  SELECT create_hypertable('parking_transactions', 'entry_timestamp');
+
+  
+  CREATE INDEX ON parking_transactions (parking_lot_id); 
+  CREATE INDEX ON parking_transactions (user_id);
+
+  
+
+  
 
 EOSQL
 

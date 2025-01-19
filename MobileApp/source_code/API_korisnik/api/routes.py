@@ -92,7 +92,7 @@ def reserve():
         #parks_collection.update_one({"id": data['park_id']}, {"$inc": {"available_spots": -1}}) - ##TODO: KeyValueDB - sensors do this
         #Insert reservation into TimescaleDB
         timescale_cursor.execute("""
-            INSERT INTO ParkingTransactions(parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp, checkout_price )
+            INSERT INTO parking_transactions(parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp, checkout_price )
             VALUES (%s, %s, %s, NOW(), %s, %s)
         """, (data['id_parking_lot'],data.get('id_parking_spot') ,data['id_user'], None, None)
         )
@@ -107,7 +107,7 @@ def checkout():
 
     #Retrieve the resertvation from TimescaleDB
     timescale_cursor.execute("""
-        SELECT * FROM TimestampDB
+        SELECT * FROM parking_transactions
         WHERE parking_lot_id = %s AND user_id = %s AND exit_timestamp IS NULL
     """, (data['id_parking_lot'], data['id_user'])
     )
@@ -130,7 +130,7 @@ def checkout():
 
     #Updating TimestampDB record with leaving timestamp and cost
     timescale_cursor.execute("""
-        UPDATE TimestampDB
+        UPDATE parking_transactions
         SET exit_timestamp = NOW(), checkout_price = %s
         WHERE parking_lot_id = %s AND user_id = %s parking_spot_id = %s
     """, (total_cost, data['id_parking_lot'], data['id_user'], reservation['id_parking_spot'])
