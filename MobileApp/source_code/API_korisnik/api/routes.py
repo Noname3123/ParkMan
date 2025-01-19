@@ -97,7 +97,7 @@ def reserve():
         """, (data['id_parking_lot'],data.get('id_parking_spot') ,data['id_user'], None, None)
         )
         timescale_conn.commit()
-        return jsonify({"message": "Reservation successful", "code": reservation_code}) #TODO: look how to use this - it will probably get sent to mobile app storage of user
+        return jsonify({"message": "Reservation successful", "code": reservation_code})#TODO: make the id of transaction as reservation_code #TODO: look how to use this - it will probably get sent to mobile app storage of user
     else:
         return jsonify({"message": "Reservation failed, no spots available"})
     

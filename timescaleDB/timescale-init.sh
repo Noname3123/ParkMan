@@ -16,10 +16,12 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER"  --dbname "$POSTGRES_DB"<<-E
   GRANT ALL PRIVILEGES ON DATABASE $POSTGRES_DB TO $POSTGRES_USER;
   \c $POSTGRES_DB
   CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+  CREATE EXTENSION IF NOT EXISTS "pgcrypto";
   -- Create the ParkingTransactions table
   CREATE TABLE ParkingTransactions (
+    transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     parking_lot_id    TEXT             NOT NULL,
-    parking_spot_id   INT             NOT NULL,
+    parking_spot_id   INT             ,
     user_id           TEXT             NOT NULL,
     entry_timestamp   TIMESTAMPTZ     NOT NULL,
     exit_timestamp    TIMESTAMPTZ     NULL,
