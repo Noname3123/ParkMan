@@ -51,7 +51,8 @@ def register():
     user = {
         "name": data['name'],
         "surname": data['surname'],
-        "car_registration": data.get('car_registration', []) #Empty list for storing users car registration numbers
+        "car_registration": data.get('car_registration', []), #Empty list for storing users car registration numbers
+        "home_geolocation": data.get('home_geolocation'),
     }
 
     result = users_collection.insert_one(user)
@@ -91,12 +92,12 @@ def reserve():
         #parks_collection.update_one({"id": data['park_id']}, {"$inc": {"available_spots": -1}}) - ##TODO: KeyValueDB - sensors do this
         #Insert reservation into TimescaleDB
         timescale_cursor.execute("""
-            INSERT INTO ParkingTransactions(parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp, checkout_price )
+            INSERT INTO parking_transactions(parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp, checkout_price )
             VALUES (%s, %s, %s, NOW(), %s, %s)
         """, (data['id_parking_lot'],data.get('id_parking_spot') ,data['id_user'], None, None)
         )
         timescale_conn.commit()
-        return jsonify({"message": "Reservation successful", "code": reservation_code}) #TODO: look how to use this - it will probably get sent to mobile app storage of user
+        return jsonify({"message": "Reservation successful", "code": reservation_code})#TODO: make the id of transaction as reservation_code #TODO: look how to use this - it will probably get sent to mobile app storage of user
     else:
         return jsonify({"message": "Reservation failed, no spots available"})
     
@@ -106,7 +107,7 @@ def checkout():
 
     #Retrieve the resertvation from TimescaleDB
     timescale_cursor.execute("""
-        SELECT * FROM TimestampDB
+        SELECT * FROM parking_transactions
         WHERE parking_lot_id = %s AND user_id = %s AND exit_timestamp IS NULL
     """, (data['id_parking_lot'], data['id_user'])
     )
@@ -129,7 +130,7 @@ def checkout():
 
     #Updating TimestampDB record with leaving timestamp and cost
     timescale_cursor.execute("""
-        UPDATE TimestampDB
+        UPDATE parking_transactions
         SET exit_timestamp = NOW(), checkout_price = %s
         WHERE parking_lot_id = %s AND user_id = %s parking_spot_id = %s
     """, (total_cost, data['id_parking_lot'], data['id_user'], reservation['id_parking_spot'])
