@@ -13,7 +13,7 @@ load_dotenv()
 #-------------------------------------------------------------------
 # MongoDB Configuration 
 #-------------------------------------------------------------------
-MONGO_URI = os.getenv("MONGO_USER_DATABASE_URI", "mongodb://user_Person:mongo_pass@mongo_user_db_service:27017/ParkMan_user_db")
+MONGO_URI = os.getenv("MONGO_MANAGER_DATABASE_R_ONLY_URI", "mongodb://external:external_pass@localhost:27017/ParkMan_manager_db")
 mongo_client = MongoClient(MONGO_URI)
 mongo_db = mongo_client.get_database()
 
@@ -24,7 +24,7 @@ parking_spots_collection = mongo_db.parking_spots
 #-------------------------------------------------------------------
 # Redis Configuration (Key-Value store for sensor data)
 #-------------------------------------------------------------------
-REDIS_HOST = os.getenv("REDIS_HOST", "redis_parking_spots_status")
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 redis_client = redis.StrictRedis(host = REDIS_HOST, port = REDIS_PORT, decode_responses = True)
 
