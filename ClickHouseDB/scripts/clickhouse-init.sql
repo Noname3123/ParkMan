@@ -1,4 +1,9 @@
 
+
+
+
+
+
 CREATE DATABASE IF NOT EXISTS parking_db;
 CREATE TABLE IF NOT EXISTS parking_db.parking_analytics  (
     owner_id String,            -- ID of parking lot owner (from MongoDB)
@@ -12,3 +17,9 @@ CREATE TABLE IF NOT EXISTS parking_db.parking_analytics  (
 ENGINE = MergeTree()
 PARTITION BY (owner_id, toYYYYMM(entry_timestamp))  -- Composite partition by owner_id and year-month of entry_timestamp
 ORDER BY (owner_id, parking_lot_id, entry_timestamp, user_id);  -- Order by owner_id, parking_lot_id, entry_timestamp, and user_id
+
+CREATE USER parkman_user IDENTIFIED BY 'parkman_user_pass';
+GRANT ALTER, SELECT ON parking_db.parking_analytics TO parkman_user; 
+GRANT ALTER ON parking_db TO parkman_user; 
+
+

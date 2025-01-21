@@ -9,7 +9,7 @@
         </default>
     </profiles>
     <users>
-        <default>
+        <default > <!--NOT ALLOWED IN PRODUCTION-->
             <access_management>1</access_management>
             <profile>default</profile>
             <networks>
