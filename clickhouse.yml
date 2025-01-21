@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    container_name: clickhouse
+    hostname: clickhouse
+    volumes:
+      - ./ClickHouseDB/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./ClickHouseDB/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - clickhouse_db:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server/
+      - ./ClickHouseDB/scripts:/docker-entrypoint-initdb.d 
+    ports:
+      - "8123:8123" #HTTP port
+      - "9999:9000" #Native Client port
+
+    networks:
+      - app-network
+
+volumes:
+  clickhouse_db: {}
+  clickhouse_logs: {}
+
+  
