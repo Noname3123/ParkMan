@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS parking_db.parking_analytics  (
 ) 
 ENGINE = MergeTree()
 PARTITION BY (owner_id, toYYYYMM(entry_timestamp))  -- Composite partition by owner_id and year-month of entry_timestamp
-ORDER BY (owner_id, owner_name, parking_lot_id, parking_lot_name, entry_timestamp, user_id, user_name);  -- Order by owner_id and name, parking_lot_id and name, entry_timestamp, and user_id
+ORDER BY (owner_id, owner_full_name, parking_lot_id, parking_lot_name, entry_timestamp, user_id, user_full_name);  -- Order by owner_id and name, parking_lot_id and name, entry_timestamp, and user_id
 
 CREATE USER parkman_user IDENTIFIED BY 'parkman_user_pass';
 GRANT ALTER, SELECT ON parking_db.parking_analytics TO parkman_user; 
