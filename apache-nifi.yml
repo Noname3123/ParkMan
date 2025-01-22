@@ -1,0 +1,45 @@
+version: "3"
+
+services:
+  nifi:
+    image: apache/nifi:latest
+    ports:
+      - "8443:8443" #server runs here on https
+      - "8181:8181"
+      - "10000:10000"
+    volumes:
+      - conf:/opt/nifi/current/conf
+      - content:/opt/nifi/current/content_repository
+      - db:/opt/nifi/current/database_repository
+      - flowfile:/opt/nifi/current/flowfile_repository
+      - provenance:/opt/nifi/current/provenance_repository
+      - logs:/opt/nifi/current/logs
+      - data:/opt/nifi/current/data
+
+    
+
+    restart:
+      always
+
+    depends_on:
+        clickhouse:
+          condition: service_healthy
+        mongo_manager_db_service:
+          condition: service_healthy
+        mongo_user_db_service:
+          condition: service_healthy
+        park_transactions_db:
+          condition: service_healthy
+
+
+      
+
+volumes:
+  conf:
+  content:
+  db:
+  flowfile:
+  provenance:
+  logs:
+  data:
+

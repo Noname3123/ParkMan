@@ -14,11 +14,22 @@ services:
       - "8123:8123" #HTTP port
       - "9999:9000" #Native Client port
 
+    healthcheck:
+      test: ["CMD-SHELL", "clickhouse-client -q 'SELECT 1'"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
     networks:
       - app-network
 
 volumes:
   clickhouse_db: {}
   clickhouse_logs: {}
+
+
+
+
 
   
