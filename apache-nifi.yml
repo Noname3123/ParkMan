@@ -8,13 +8,19 @@ services:
       - "8181:8181"
       - "10000:10000"
     volumes:
-      - conf:/opt/nifi/current/conf
-      - content:/opt/nifi/current/content_repository
-      - db:/opt/nifi/current/database_repository
-      - flowfile:/opt/nifi/current/flowfile_repository
-      - provenance:/opt/nifi/current/provenance_repository
-      - logs:/opt/nifi/current/logs
-      - data:/opt/nifi/current/data
+      - conf:/opt/nifi-current/conf
+      - content:/opt/nifi-current/content_repository
+      - db:/opt/nifi-current/database_repository
+      - flowfile:/opt/nifi-current/flowfile_repository
+      - provenance:/opt/nifi-current/provenance_repository
+      - logs:/opt/nifi-current/logs
+      - data:/opt/nifi-current/data
+
+
+    networks:
+      - app-network
+
+    
 
     
 
@@ -42,4 +48,6 @@ volumes:
   provenance:
   logs:
   data:
+
+
 

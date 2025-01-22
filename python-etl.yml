@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  etl:
+    build: ./ETL_BATCH
+    container_name: etl_container
+    depends_on:
+        mongo_manager_db_service:
+            condition: service_healthy
+        mongo_user_db_service:
+            condition: service_healthy
+        clickhouse:
+            condition: service_healthy
