@@ -49,6 +49,7 @@ services:
     depends_on:
       - manager_app
       - mobile_app
+      - sensor_app
     networks:
       - app-network
     ports:
