@@ -46,13 +46,18 @@ def generate_parking_spots(n, parking_lots):
     } for _ in range(n)]
     return parking_spots
 
-def generate_reservations(users, parking_lots):
-    reservations = [{
-        "id_user": random.choice(users), #Add this reservation to a random user
-        "id_parking_lot": random.choice(parking_lots), #Add this reservation to a random parking lot
-        "timestamp": (datetime.now() - timedelta(hours = random.randint(1, 24))).strftime('%Y-%m-%dT%H:%M:%S'), #Random visit time
-        "id_parking_spot": random.randint(1, 100) #Random simulated parking spot ID
-    } for _ in range(len(users))]
+def generate_reservations(users_list, parking_spots, reservation_count):
+    reservations = []
+    for _ in range(reservation_count):
+        user_id = random.choice(users_list)
+        random_spot = random.choice(parking_spots)
+        reservation = {
+            "id_user": user_id,
+            "id_parking_lot": random_spot["parking_lot"], #Add this reservation to a random parking lot
+            "id_parking_spot": random_spot["_id"], #Random simulated parking spot ID
+            "timestamp": (datetime.now() - timedelta(hours = random.randint(1, 24))).strftime('%Y-%m-%dT%H:%M:%S'), #Random visit time
+        }
+        reservations.append(reservation)
     return reservations
 
 #----------------------------------------------------------------------------------------------------
@@ -85,16 +90,10 @@ def get_data(url):
 #----------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-
     
-
 
     
 
-    #Generate fake data
-    
-    
-    
     
 
     #Generate and Post the fake data
@@ -103,23 +102,33 @@ if __name__ == "__main__":
     post_data(f'{base_url_owner}/owners', owners)
 
     print("Adding Parking Lots...")
-    parking_lots = generate_parking_lots(5, get_data(f'{base_url_owner}/owners/ALL'))
+    parking_lot_owner_ids = get_data(f'{base_url_owner}/owners/ALL')
+    parking_lots = generate_parking_lots(5, parking_lot_owner_ids)
     post_data(f'{base_url_owner}/parking_lots', parking_lots)
 
     print("Adding Parking Spots...")
-    parking_spots = generate_parking_spots(100, get_data(f'{base_url_owner}/parking_lots/ALL'))
+    lot_ids_for_spots = get_data(f'{base_url_owner}/parking_lots/ALL')
+    parking_spots = generate_parking_spots(100, lot_ids_for_spots)
     post_data(f'{base_url_owner}/parking_spots', parking_spots)
 
     print("Registering Users...")
     users = generate_users(10)
     post_data(f'{base_url_user}/register', users)
 
+    users_ids = get_data(f'{base_url_owner}/users/ALL')
+    spots_data = get_data(f'{base_url_owner}/parking_spots/ALL')
     print("Simulating Reservations...")
-    reservations = generate_reservations(get_data(f'{base_url_owner}/users/ALL'), get_data(f'{base_url_owner}/parking_lots/ALL'))
+    reservations = generate_reservations(users_ids, spots_data, 20)
 
     for reservation in reservations:
-        response = requests.post(f'{base_url_user}/reserve', json = reservation, headers = {'Host': hostname})
+        response = requests.post(f'{base_url_user}/reserve',
+                                 json = reservation,
+                                 headers = {'Host': hostname})
         if response.status_code in [200, 201]:
-            print(f"Reservation successful: {reservation}")
+             print(f"Reservation successfull: {reservation}")
         else:
-            print(f"Failed to create reservation: {reservation}, Status Code: {response.status_code}")
+             print(f"Failed to create reservation: {reservation}, Status Code: {response.status_code}")
+    
+
+
+#Funkcija za randomizaciju podataka Redis-a (dolazak/odlazak) - delay od cca 5 min

@@ -3,4 +3,5 @@ Flask
 requests
 python-dotenv
 pymongo
+redis
 

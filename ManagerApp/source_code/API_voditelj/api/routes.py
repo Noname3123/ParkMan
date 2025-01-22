@@ -3,6 +3,7 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 from bson import ObjectId
+import redis
 
 api = Blueprint('api', __name__)
 
@@ -27,6 +28,14 @@ owners_collection = db.owners
 parking_lots_collection = db.parking_lots
 parking_spots_collection = db.parking_spots
 users_collection=db_external.users
+
+#----------------------------------------------------------------------------------------------------
+#   Setting Up Redis
+#----------------------------------------------------------------------------------------------------
+
+REDIS_HOST = os.getenv("REDIS_HOST", "redis_parking_spots_status")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+redis_client = redis.StrictRedis(host = REDIS_HOST, port = REDIS_PORT, decode_responses = True)
 
 #----------------------------------------------------------------------------------------------------
 #   Owner Routes
@@ -81,7 +90,14 @@ def add_parking_lot():
             {"_id": ObjectId(data['owner_id'])},
             {"$push": {"parking_lots": result.inserted_id}}
         )
-    return jsonify({"message": "Parking lot added", "id": str(result.inserted_id)}), 201
+
+    #Create a Redis hash for the new parking lot, with a placeholder
+    lot_id_str = str(result.inserted_id)
+    lot_key = f"parking_lot:{lot_id_str}"
+
+    redis_client.hset(lot_key, "false", "false")
+
+    return jsonify({"message": "Parking lot added", "id": lot_id_str}), 201
 
 #define get_users API route (so that manager can see info about users)
 @api.route('/users/<string:user_id>', methods = ['GET']) #Defining URL for getting existing owners
@@ -130,13 +146,30 @@ def add_parking_spot():
         {"_id": ObjectId(data['parking_lot'])},
         {"$push": {"parking_spaces": result.inserted_id}}
     )
+
+    #Add a new field in Redis for this spot, making occupancy as "false"
+    lot_key = f"parking_lot:{data{'parking_lot'}}"
+    spot_id_str = str(result.inserted_id)
+
+    redis_client.hset(lot_key, f"spot_{spot_id_str}", "false")
+
     return jsonify({"message": "Parking spot added", "id": str(result.inserted_id)}), 201
 
-@api.route('/parking_lots/<string:spot_id>', methods = ['GET']) #Defining URL for getting existing parking spots
+@api.route('/parking_spots/<string:spot_id>', methods = ['GET']) #Defining URL for getting existing parking spots
 def get_parking_spot(spot_id):
-    parking_spot = parking_spots_collection.find_one({"_id": ObjectId(spot_id)}, {"_id": 0})
-    if parking_spot:
-        return jsonify(parking_spot)
+    if spot_id == "ALL":
+        spots = []
+        for s in parking_spots_collection.find({}):
+            s["_id"] = str(s["_id"])
+            s["parking_lot"] = str(s["parking_lot"])
+            spots.append(s)
+        return jsonify(spots)
+    
+    spot = parking_spots_collection.find_one({"_id": ObjectId(spot_id)})
+    if spot:
+        spot["_id"] = str(s["_id"])
+        spot["parking_lot"] = str(s["parking_lot"])
+        return jsonify(spot)
     else:
         return jsonify({"message": "Parking spot not found"}), 404
     

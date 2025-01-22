@@ -7,7 +7,7 @@ from psycopg2 import connect
 import random
 from datetime import datetime
 from bson import ObjectId
-#from app import timescale_conn #from app import timescale_conn causes circular import issues
+import redis
 
 user_api = Blueprint('user_api', __name__)
 
@@ -37,6 +37,14 @@ TIMESCALE_DB_URI = os.getenv("TIMESCALE_DB_DATABASE_URI", "postgresql://postgres
 
 timescale_conn = connect(TIMESCALE_DB_URI)
 timescale_cursor = timescale_conn.cursor(cursor_factory = RealDictCursor)
+
+#----------------------------------------------------------------------------------------------------
+#   Setting Up Redis
+#----------------------------------------------------------------------------------------------------
+
+REDIS_HOST = os.getenv("REDIS_HOST", "redis_parking_spots_status")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+redis_client = redis.StrictRedis(host = REDIS_HOST, port = REDIS_PORT, decode_responses = True)
 
 #----------------------------------------------------------------------------------------------------
 #   User Registration and Login
@@ -72,7 +80,7 @@ def login():
         return jsonify({"message": "Invalid username or password"})
 
 #----------------------------------------------------------------------------------------------------
-#   Getting all the parks, reserving a park and park checkout
+#   Getting the closest park, free spots, reserving a park and park checkout
 #----------------------------------------------------------------------------------------------------
     
 @user_api.route('/parks', methods = ['GET'])
@@ -80,26 +88,84 @@ def get_parks(): #TODO: this should be used as get closest park to user's locati
     parks = list(parks_collection.find({}, {"_id": 0})) #{"_id: 0"} - Exclude the ID of the owner when outputing results
     return jsonify(parks)
 
+@user_api.route('/parks', methods = ['GET'])
+def get_free_spots(lot_id):
+    """
+    Returns a list of free (unoccupied) spot IDs for a given lot, 
+    based on the Redis hash: parking_lot:<lot_id>.
+    Fields in that hash look like:
+       spot_<spotId> => "false" or "true"
+    """
+    lot_key = f"parking_lot:{lot_id}"
+    if not redis_client.exists(lot_key):
+        return jsonify({"message": f"Lot {lot_id} not found"}), 404
+    
+    #Get data about spots
+    spot_data = redis_client.hgetall(lot_key)
+
+    #Now isolate free spots
+    free_spots = []
+    for field, value in spot_data.items():
+        if field.startswith("spot_") and not field.endswith("_last_update"):
+            if value == "false":
+                _, spot_id_str = field.split("_", 1)
+                free_spots.append(spot_id_str)
+
+    return jsonify({"lot_id": lot_id, "free_spots": free_spots}), 200
+
 @user_api.route('/reserve', methods = ['POST'])
 def reserve():
     data = request.get_json()
     reservation_code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
     
-    #park = parks_collection.find_one({"id": data['park_id'], "available_spots": {"$gt": 0}}) #TODO: available spots are not part of MongoDB (Key-valueDB)
-    #TODO: add check whether parking lot (data["id_parking_lot"]) is free and exists in MongoDB - phase 2
-    if True and parks_collection.find_one({"_id": ObjectId(data["id_parking_lot"])}):
-        #Update the available spots in the park
-        #parks_collection.update_one({"id": data['park_id']}, {"$inc": {"available_spots": -1}}) - ##TODO: KeyValueDB - sensors do this
-        #Insert reservation into TimescaleDB
-        timescale_cursor.execute("""
-            INSERT INTO parking_transactions(parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp, checkout_price )
+    #Check if the lot exists in MongoDB
+    lot_id = data["id_parking_lot"]
+    if not parks_collection.find_one({"_id": ObjectId(lot_id)}):
+        return jsonify({"message": "No such parking lot found."}), 404
+    
+    #If the spot is found, confirm it's not occupied
+    spot_id = data.get("id_parking_spot")
+    if not spot_id:
+        return jsonify({"message": "Missing required field: id_parking_spot"}), 400
+    
+    lot_key = f"parking_lot:{lot_id}"
+    spot_field = f"spot_{spot_id}"
+
+    #If the lot or the spot is not found
+    if not redis_client.exists(lot_key):
+        return jsonify({"message": "Lot not found or not yet initialized"}), 404
+    
+    #Check the occupation
+    spot_status = redis_client.hget(lot_key, spot_field)
+    if spot_status in None:
+        return jsonify({"message": "Spot not found"}), 404
+    
+    if spot_status == "true":
+        return jsonify({"message": "Spot is currently occupied"}), 400
+    
+    #Now we know the spot is free, so from now on mark it as "true" which means it is occupied
+    #The spot will be marked as occupied (reserved) only if the TimescaleDB reservation has successfully been commited
+    #We will roll back the transaction if the Redis insert fails
+    try:
+        timescale_cursor.execute(
+            """
+            INSERT INTO parking_transactions
+                (parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp, checkout_price)
             VALUES (%s, %s, %s, NOW(), %s, %s)
-        """, (data['id_parking_lot'],data.get('id_parking_spot') ,data['id_user'], None, None)
-        )
+            """
+        , (lot_id, spot_id, data['id_user'], None, None))
         timescale_conn.commit()
-        return jsonify({"message": "Reservation successful", "code": reservation_code})#TODO: make the id of transaction as reservation_code #TODO: look how to use this - it will probably get sent to mobile app storage of user
-    else:
-        return jsonify({"message": "Reservation failed, no spots available"})
+    
+    except Exception as e:
+        timescale_conn.rollback()
+        return jsonify({"message": f"Database error, reservation canceled: {str(e)}"}), 500
+    
+    redis_client.hset(lot_key, spot_field, "true")
+
+    return jsonify({
+        "message": "Reservation successful", 
+        "code": reservation_code
+    }), 200
     
 @user_api.route('/checkout', methods = ['POST'])
 def checkout():
