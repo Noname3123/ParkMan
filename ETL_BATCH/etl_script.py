@@ -131,8 +131,8 @@ parking_lots,users,owner=get_filtered_data_from_mongo(filtered_ids)
 merged=merge_data(data_timescale,parking_lots,users,owner)
 
 
+import_data_into_click_house(merged)
 
 
 
-
-print(merged)
+print(f"Imported data into clickhouse range {begin_range}, {end_range}")

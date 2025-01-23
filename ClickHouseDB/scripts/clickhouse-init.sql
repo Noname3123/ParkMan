@@ -14,15 +14,15 @@ CREATE TABLE IF NOT EXISTS parking_db.parking_analytics  (
     user_id String,             -- ID of user who parked (from TimescaleDB)
     user_full_name String,             -- Name + surname of user (MongoDB)
     entry_timestamp DateTime,   -- When user entered parking lot (from TimescaleDB)
-    leaving_timestamp DateTime, -- When user left parking lot (from TimescaleDB)
-    checkout_price Float64      -- How much user has to pay for parking (from TimescaleDB)
+    leaving_timestamp Nullable(DateTime), -- When user left parking lot (from TimescaleDB)
+    checkout_price Nullable(Float64)      -- How much user has to pay for parking (from TimescaleDB)
 ) 
 ENGINE = MergeTree()
 PARTITION BY (owner_id, toYYYYMM(entry_timestamp))  -- Composite partition by owner_id and year-month of entry_timestamp
 ORDER BY (owner_id, owner_full_name, parking_lot_id, parking_lot_name, entry_timestamp, user_id, user_full_name);  -- Order by owner_id and name, parking_lot_id and name, entry_timestamp, and user_id
 
 CREATE USER parkman_user IDENTIFIED BY 'parkman_user_pass';
-GRANT ALTER, SELECT ON parking_db.parking_analytics TO parkman_user; 
+GRANT ALTER, SELECT, INSERT ON parking_db.parking_analytics TO parkman_user; 
 GRANT ALTER ON parking_db TO parkman_user; 
 
 

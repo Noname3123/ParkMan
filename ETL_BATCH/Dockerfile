@@ -22,6 +22,7 @@ COPY cronjob /etc/cron.d/cronjob
 
 # Give execution rights on the cron job
 RUN chmod 0644 /etc/cron.d/cronjob
+RUN chmod a+x /app/etl_script.py
 
 # Apply the cron job
 RUN crontab /etc/cron.d/cronjob
@@ -32,4 +33,4 @@ RUN touch /var/log/cron.log
 
 
 # Run the Python script
-CMD ["cron", "-f"]
+CMD ["bash","-c","cron && tail -f /var/log/cron.log"]
