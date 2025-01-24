@@ -148,7 +148,7 @@ def add_parking_spot():
     )
 
     #Add a new field in Redis for this spot, making occupancy as "false"
-    lot_key = f"parking_lot:{data{'parking_lot'}}"
+    lot_key = f"parking_lot:{data['parking_lot']}"
     spot_id_str = str(result.inserted_id)
 
     redis_client.hset(lot_key, f"spot_{spot_id_str}", "false")

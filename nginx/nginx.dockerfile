@@ -2,6 +2,9 @@
 # Use the official Nginx image as the base
 FROM nginx:latest
 
+#install curl
+RUN apt-get update && apt-get install -y curl
+
 # Remove the default Nginx configuration file from container
 RUN rm /etc/nginx/conf.d/default.conf
 

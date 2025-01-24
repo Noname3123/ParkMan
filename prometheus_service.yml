@@ -1,0 +1,28 @@
+
+version: '3'
+
+
+services:
+    prometheus:
+        image: prom/prometheus:latest
+        container_name: prometheus
+        
+        volumes:
+            - ./Prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+            - prometheus-data:/prometheus
+
+        ports:
+            - "10000:9090"
+        
+        networks:
+            - app-network
+
+        depends_on:
+            nginx:
+                condition: service_healthy
+
+        command:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+
+volumes:
+  prometheus-data: {}
