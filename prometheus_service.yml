@@ -24,5 +24,77 @@ services:
         command:
             - '--config.file=/etc/prometheus/prometheus.yml'
 
+    nginx-prometheus-exporter:
+        image: nginx/nginx-prometheus-exporter:latest
+        container_name: nginx_exporter
+        expose:
+            - "9113"
+        command: ["-nginx.scrape-uri", "http://nginx/nginx_status"] #NOTE: nginx==name of nginx server
+        depends_on:
+            - nginx
+        networks:
+            - app-network
+
+    mongodb-exporter-manager-db:
+        image: percona/mongodb_exporter:0.43.1
+        container_name: mongodb-exporter-manager-db
+        
+        expose:
+            - "9216"
+        environment:
+            MONGODB_URI: mongodb://external:external_pass@mongo_manager_db_service:27017
+        command:
+        - '--collect-all'
+        - '--compatible-mode'
+    
+        networks:
+            - app-network
+
+
+    mongodb-exporter-user-db:
+        image: percona/mongodb_exporter:0.43.1
+        container_name:  mongodb-exporter-user-db
+        
+
+        expose:
+            - "9216"
+        environment:
+            MONGODB_URI: mongodb://external:external_pass@mongo_user_db_service:27017
+        command:
+        - '--collect-all'
+        - '--compatible-mode'
+    
+        networks:
+            - app-network
+
+
+    postgres-exporter:
+        image: prometheuscommunity/postgres-exporter:latest
+        container_name: postgres-exporter
+        expose:
+            - "9187"
+        environment:
+            DATA_SOURCE_NAME: postgresql://postgres_user:postgres_pass@park_transactions_db:5432//postgres?sslmode=disable
+
+
+        networks:
+            - app-network
+
+
+    
+    redis-exporter:
+        image: oliver006/redis_exporter:latest
+        container_name: redis_exporter
+        expose:
+            - "9121"
+        environment:
+            REDIS_ADDR: redis_parking_spots_status:6379 #redis_name:redis_port
+
+        networks:
+            - app-network
+
+
+
+
 volumes:
   prometheus-data: {}
