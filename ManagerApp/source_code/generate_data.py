@@ -90,12 +90,6 @@ def get_data(url):
 #----------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    
-
-    
-
-    
-
     #Generate and Post the fake data
     print("Registering Owners...")
     owners = generate_owners(2)
@@ -129,6 +123,3 @@ if __name__ == "__main__":
         else:
              print(f"Failed to create reservation: {reservation}, Status Code: {response.status_code}")
     
-
-
-#Funkcija za randomizaciju podataka Redis-a (dolazak/odlazak) - delay od cca 5 min

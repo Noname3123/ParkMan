@@ -137,7 +137,7 @@ def reserve():
     
     #Check the occupation
     spot_status = redis_client.hget(lot_key, spot_field)
-    if spot_status in None:
+    if spot_status is None:
         return jsonify({"message": "Spot not found"}), 404
     
     if spot_status == "true":
@@ -153,7 +153,7 @@ def reserve():
                 (parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp, checkout_price)
             VALUES (%s, %s, %s, NOW(), %s, %s)
             """
-        , (lot_id, spot_id, data['id_user'], None, None))
+        , (lot_id, None, data['id_user'], None, None))
         timescale_conn.commit()
     
     except Exception as e:
@@ -169,48 +169,85 @@ def reserve():
     
 @user_api.route('/checkout', methods = ['POST'])
 def checkout():
+    """
+    POST body should contain:
+      {
+        "id_parking_lot": "<Mongo ObjectID as string>",
+        "id_parking_spot": "<Mongo ObjectID as string>",
+        "id_user": "<User ID from Mongo>"
+      }
+    """
+
     data = request.get_json()
 
-    #Retrieve the resertvation from TimescaleDB
+    # 1) Validate input
+    lot_id = data.get('id_parking_lot')
+    spot_id = data.get('id_parking_spot')
+    user_id = data.get('id_user')
+    if not (lot_id and spot_id and user_id):
+        return jsonify({"message": "Missing one of required fields: id_parking_lot, id_parking_spot, id_user"}), 400
+
+    # 2) Check the TimescaleDB table for an active reservation
     timescale_cursor.execute("""
-        SELECT * FROM parking_transactions
-        WHERE parking_lot_id = %s AND user_id = %s AND exit_timestamp IS NULL
-    """, (data['id_parking_lot'], data['id_user'])
-    )
+        SELECT parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp
+        FROM parking_transactions
+        WHERE parking_lot_id = %s
+          AND parking_spot_id = %s
+          AND user_id = %s
+          AND exit_timestamp IS NULL
+        LIMIT 1
+    """, (lot_id, None, user_id))
     reservation = timescale_cursor.fetchone()
 
     if not reservation:
-        return jsonify({"message": "Reservation not found"}), 404
-    
-    #Calculate visit duration and cost
-    entry_time = reservation['timestamp']
-    leave_time = datetime.utcnow() #TODO: update since deprecated
-    duration_hours = (leave_time - entry_time).total_seconds() / 3600
-    duration_hours = max(1, int(duration_hours)) #Minimum payment is one hour
+        return jsonify({"message": "No active reservation found for this user, spot, and lot"}), 404
 
-    #Retrieve parking lot price
-    parking_lot = parks_collection.find_one({"id": data['park_id']})
-    price_per_hour = parking_lot.get("price_per_hour", 2.0) #Default price if not set differently
+    entry_time = reservation['entry_timestamp']
+    # Make sure we have an entry_time
+    if not entry_time:
+        return jsonify({"message": "The reservation has no entry_timestamp"}), 500
+
+    # 3) Calculate how long they've stayed
+    leave_time = datetime.utcnow()
+    duration_hours = (leave_time - entry_time).total_seconds() / 3600
+    duration_hours = max(1, int(duration_hours))  # Minimum 1 hour
+
+    # 4) Retrieve the parking lot doc from Mongo to get the price_per_hour
+    parking_lot_doc = parks_collection.find_one({"_id": ObjectId(lot_id)})
+    if not parking_lot_doc:
+        return jsonify({"message": "Parking lot not found in DB (strange)"}), 404
+
+    price_per_hour = parking_lot_doc.get("price_per_hour", 2.0)  # fallback if missing
 
     total_cost = round(duration_hours * price_per_hour, 2)
 
-    #Updating TimestampDB record with leaving timestamp and cost
-    timescale_cursor.execute("""
-        UPDATE parking_transactions
-        SET exit_timestamp = NOW(), checkout_price = %s
-        WHERE parking_lot_id = %s AND user_id = %s parking_spot_id = %s
-    """, (total_cost, data['id_parking_lot'], data['id_user'], reservation['id_parking_spot'])
-    )
-    timescale_conn.commit()
+    # 5) Update the TimescaleDB record: exit_timestamp + cost
+    try:
+        timescale_cursor.execute("""
+            UPDATE parking_transactions
+            SET exit_timestamp = NOW(),
+                checkout_price = %s
+            WHERE parking_lot_id = %s
+              AND parking_spot_id = %s
+              AND user_id = %s
+              AND exit_timestamp IS NULL
+        """, (total_cost, lot_id, None, user_id))
+        timescale_conn.commit()
+    except Exception as e:
+        timescale_conn.rollback()
+        return jsonify({"message": f"Database error during checkout: {str(e)}"}), 500
 
-    #TODO: Increment available spots in MongoDB - this is related to key-val DB - phase 2
-    ##parks_collection.update_one({"id": data['id_parking_lot']}, {"$inc": {"available_spots": 1}})
+    # 6) Mark spot as free in Redis
+    lot_key = f"parking_lot:{lot_id}"
+    spot_field = f"spot_{spot_id}"
+    redis_client.hset(lot_key, spot_field, "false")
 
+    # 7) Return success
     return jsonify({
         "message": "Checkout successful",
         "duration_hours": duration_hours,
         "total_cost": total_cost
-    })
+    }), 200
 
 #----------------------------------------------------------------------------------------------------
 #   Route Configuration
