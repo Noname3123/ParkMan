@@ -208,7 +208,7 @@ def checkout():
         return jsonify({"message": "The reservation has no entry_timestamp"}), 500
 
     # 3) Calculate how long they've stayed
-    leave_time = datetime.now()
+    leave_time = datetime.now().replace(tzinfo = timezone.utc)
     duration_hours = (leave_time - entry_time).total_seconds() / 3600
     duration_hours = max(1, int(duration_hours))  # Minimum 1 hour
 
