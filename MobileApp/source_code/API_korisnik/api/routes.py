@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from psycopg2.extras import RealDictCursor
 from psycopg2 import connect
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 import redis
 
@@ -192,23 +192,23 @@ def checkout():
         SELECT parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp
         FROM parking_transactions
         WHERE parking_lot_id = %s
-          AND parking_spot_id = %s
           AND user_id = %s
           AND exit_timestamp IS NULL
         LIMIT 1
-    """, (lot_id, None, user_id))
+    """, (lot_id, user_id))
     reservation = timescale_cursor.fetchone()
 
     if not reservation:
         return jsonify({"message": "No active reservation found for this user, spot, and lot"}), 404
 
     entry_time = reservation['entry_timestamp']
+    entry_time = entry_time.replace(tzinfo = timezone.utc)
     # Make sure we have an entry_time
     if not entry_time:
         return jsonify({"message": "The reservation has no entry_timestamp"}), 500
 
     # 3) Calculate how long they've stayed
-    leave_time = datetime.utcnow()
+    leave_time = datetime.now()
     duration_hours = (leave_time - entry_time).total_seconds() / 3600
     duration_hours = max(1, int(duration_hours))  # Minimum 1 hour
 
@@ -228,10 +228,9 @@ def checkout():
             SET exit_timestamp = NOW(),
                 checkout_price = %s
             WHERE parking_lot_id = %s
-              AND parking_spot_id = %s
               AND user_id = %s
               AND exit_timestamp IS NULL
-        """, (total_cost, lot_id, None, user_id))
+        """, (total_cost, lot_id, user_id))
         timescale_conn.commit()
     except Exception as e:
         timescale_conn.rollback()

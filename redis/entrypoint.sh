@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -e -m
 
 RETRIES=5
 SLEEP=5
@@ -53,15 +53,11 @@ done
 
 echo "===> Both Manager & Sensor appear up. Now launching Redis..."
 
-exec "$@"
+redis-server --appendonly yes &
+
+sleep 5
 
 echo "===> Done launching. Now running redis_init to fill the data..."
-
-source /app/venv/bin/activate
-
-sleep 15
-
 python3 ./redis_init.py
 
-
-
+fg %1

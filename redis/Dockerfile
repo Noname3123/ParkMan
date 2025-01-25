@@ -32,5 +32,3 @@ EXPOSE 6379
 # Use an absolute path so Docker can find it
 ENTRYPOINT ["./entrypoint.sh"]
 
-# Finally, default to running Redis
-CMD ["redis-server", "--appendonly", "yes"]
