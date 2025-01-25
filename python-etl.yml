@@ -4,6 +4,8 @@ services:
   etl:
     build: ./ETL_BATCH
     container_name: etl_container
+    expose:
+        - "9395"
     env_file:
         - ./ETL_BATCH/.env
     depends_on:

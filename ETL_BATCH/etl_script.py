@@ -6,44 +6,24 @@ from psycopg2.extras import RealDictCursor
 from datetime import datetime, timedelta
 from bson import ObjectId
 import clickhouse_connect
-
-
-### load env
-load_dotenv()
-
-
-#### MongoDB config
-
-MONGO_EXTERAL_USER_URI = os.getenv("MONGO_USER_DATABASE_R_ONLY_URI", "mongodb://external:external_pass@localhost:27017/ParkMan_user_db")
-client_external_user_db = MongoClient(MONGO_EXTERAL_USER_URI)
-db_external_user = client_external_user_db.get_database()
-
-MONGO_EXTERNAL_MANAGER=os.getenv("MONGO_MANAGER_DATABASE_R_ONLY_URI", "mongodb://external:external_pass@localhost:27016/ParkMan_manager_db")
-external_client_managerDB=MongoClient(MONGO_EXTERNAL_MANAGER)
-db_external_manager=external_client_managerDB.get_database()
-
-### Timescale DB connection
-TIMESCALE_DB_URI=os.getenv("TIMESCALE_DB_DATABASE_URI", "postgresql://postgres_user:postgres_pass@localhost:5432/ParkingTransactionsDB")
-timescale_conn=connect(TIMESCALE_DB_URI)
-timescale_cursor=timescale_conn.cursor(cursor_factory=RealDictCursor)
+from prometheus_client import *
+import schedule
+import time as tm 
 
 
 
-###clickhouse target connect
-CLICKHOUSE_PORT=os.getenv("CLICKHOUSE_PORT", 8123)
-CLICKHOUSE_HOST=os.getenv("CLICKHOUSE_HOST", "localhost")
-CLICKHOUSE_USER=os.getenv("CLICKHOUSE_USER", "parkman_user")
-CLICKHOUSE_PASS=os.getenv("CLICKHOUSE_PASS", "parkman_user_pass")
 
-client = clickhouse_connect.get_client(host=CLICKHOUSE_HOST, port=CLICKHOUSE_PORT, user=CLICKHOUSE_USER, password=CLICKHOUSE_PASS)
+##Prometheus metrics
 
-
-##Time range
+ETL_EXECUTION_TIME = Summary('etl_execution_time', 'Time spent processing an ETL run')
+LAST_EXECUTION_TIME = Gauge('last_etl_execution', 'Timestamp of the last ETL execution')
+ETL_RECORDS_PROCESSED = Counter('etl_records_processed', 'Total number of records processed by the ETL')
+ETL_THROUGHPUT = Gauge('etl_throughput', 'Records processed per second')
 
 
-end_range= datetime.now()
 
-begin_range = end_range - timedelta(hours=24)
+##
+
 
 
 
@@ -125,14 +105,86 @@ def import_data_into_click_house(data):
 
 
 
-data_timescale, filtered_ids= get_data_from_timescale(begin_range, end_range)
-parking_lots,users,owner=get_filtered_data_from_mongo(filtered_ids)
+def exec_etl():
 
-merged=merge_data(data_timescale,parking_lots,users,owner)
+    start=tm.time()
+    
+    ## Get time range
+    end_range= datetime.now()
+
+    begin_range = end_range - timedelta(hours=24)
+    ##
+
+    ##Do ETL
+    data_timescale, filtered_ids= get_data_from_timescale(begin_range, end_range)
+    parking_lots,users,owner=get_filtered_data_from_mongo(filtered_ids)
+
+    merged=merge_data(data_timescale,parking_lots,users,owner)
+    
+
+    import_data_into_click_house(merged)
+    ##
+
+    end=tm.time()
 
 
-import_data_into_click_house(merged)
+    #Measure how long it executed
+    ETL_EXECUTION_TIME.observe(end-start)
+
+    # Update throughput
+    ETL_THROUGHPUT.set(len(merged) / (end-start))
+
+    #increment counter
+    ETL_RECORDS_PROCESSED.inc(len(merged))
+
+    LAST_EXECUTION_TIME.set_to_current_time()
+
+
+if __name__=='__main__':
+
+    ### load env
+    load_dotenv()
+
+
+    #### MongoDB config
+
+    MONGO_EXTERAL_USER_URI = os.getenv("MONGO_USER_DATABASE_R_ONLY_URI", "mongodb://external:external_pass@localhost:27017/ParkMan_user_db")
+    client_external_user_db = MongoClient(MONGO_EXTERAL_USER_URI)
+    db_external_user = client_external_user_db.get_database()
+
+    MONGO_EXTERNAL_MANAGER=os.getenv("MONGO_MANAGER_DATABASE_R_ONLY_URI", "mongodb://external:external_pass@localhost:27016/ParkMan_manager_db")
+    external_client_managerDB=MongoClient(MONGO_EXTERNAL_MANAGER)
+    db_external_manager=external_client_managerDB.get_database()
+
+    ### Timescale DB connection
+    TIMESCALE_DB_URI=os.getenv("TIMESCALE_DB_DATABASE_URI", "postgresql://postgres_user:postgres_pass@localhost:5432/ParkingTransactionsDB")
+    timescale_conn=connect(TIMESCALE_DB_URI)
+    timescale_cursor=timescale_conn.cursor(cursor_factory=RealDictCursor)
 
 
 
-print(f"Imported data into clickhouse range {begin_range}, {end_range}")
+    ###clickhouse target connect
+    CLICKHOUSE_PORT=os.getenv("CLICKHOUSE_PORT", 8123)
+    CLICKHOUSE_HOST=os.getenv("CLICKHOUSE_HOST", "localhost")
+    CLICKHOUSE_USER=os.getenv("CLICKHOUSE_USER", "parkman_user")
+    CLICKHOUSE_PASS=os.getenv("CLICKHOUSE_PASS", "parkman_user_pass")
+
+    client = clickhouse_connect.get_client(host=CLICKHOUSE_HOST, port=CLICKHOUSE_PORT, user=CLICKHOUSE_USER, password=CLICKHOUSE_PASS)
+
+
+
+    ##Expose metrics in server on port 9395
+    
+    start_http_server(9395)
+
+
+    ## define schedule (every 3 mins)
+    schedule.every(3).minutes.do(exec_etl)
+
+    #exec job in schedule
+    while True:
+        schedule.run_pending()
+        tm.sleep(1)
+
+
+    #print(f"Imported data into clickhouse range {begin_range}, {end_range}")
