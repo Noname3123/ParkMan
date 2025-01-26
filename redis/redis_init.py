@@ -13,27 +13,39 @@ REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 
 def fetch_parking_lots():
     #Fetch all parking lot IDs from the Manager API
-    url = f"http://{MANAGER_HOST}:{MANAGER_PORT}/api/parking_lots/ALL"
-    print(f"Fetching parking lots from {url}...")
-    resp = requests.get(url)
-    resp.raise_for_status()
-    return resp.json()
+
+    try:
+        url = f"http://{MANAGER_HOST}:{MANAGER_PORT}/api/parking_lots/ALL"
+        print(f"Fetching parking lots from {url}...")
+        resp = requests.get(url)
+        resp.raise_for_status()
+        return resp.json()
+    except:
+        return None
+
 
 def fetch_parking_spots():
     #Fetch all parking spots for a given parking lot from the Manager API
-    url = f"http://{MANAGER_HOST}:{MANAGER_PORT}/api/parking_spots/ALL"
-    print(f"Fetching parking spots from {url}...")
-    resp = requests.get(url)
-    resp.raise_for_status()
-    return resp.json()
+
+    try:
+        url = f"http://{MANAGER_HOST}:{MANAGER_PORT}/api/parking_spots/ALL"
+        print(f"Fetching parking spots from {url}...")
+        resp = requests.get(url)
+        resp.raise_for_status()
+        return resp.json()
+    except:
+        return None
 
 def fetch_sensor_data(lot_id):
     #Fetch latest sensor data for a parking lot from the Sensor API
-    url = f"http://{SENSOR_HOST}:{SENSOR_PORT}/sensor/lot_status/{lot_id}"
-    print(f"Fetching sensor data for lot {lot_id} from {url}...")
-    resp = requests.get(url)
-    resp.raise_for_status()
-    return resp.json()
+    try:
+        url = f"http://{SENSOR_HOST}:{SENSOR_PORT}/sensor/lot_status/{lot_id}"
+        print(f"Fetching sensor data for lot {lot_id} from {url}...")
+        resp = requests.get(url)
+        resp.raise_for_status()
+        return resp.json()
+    except:
+        return None
 
 def initialize_lot_and_spots(redis_client, lot_id, all_spots):
     #Initialize parking lot and its spots in Redis
@@ -75,6 +87,10 @@ def main():
     #1. Fetch all parking lots
     parking_lots = fetch_parking_lots()
     all_spots = fetch_parking_spots()
+
+    #If DBs are completely empty
+    if parking_lots is None or all_spots is None:
+        return
 
     #2. Initialize parking lots and spots in Redis
     for lot_id in parking_lots:

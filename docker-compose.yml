@@ -55,8 +55,6 @@ services:
       - sensor_app
     networks:
       - app-network
-    ports:
-      - 80:80
     labels:
       - traefik.enable=true
       - traefik.http.routers.nginx.rule= Host(`parkman.localhost`)
@@ -197,6 +195,7 @@ services:
       retries: 5
   redis_parking_spots_status:
     build: ./redis
+    container_name: redis_parking_spots_status
     restart: always
     ports:
       - ${REDIS_PORT}:6379
@@ -241,6 +240,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    user: "1000" #id of user to which ./Grafana/grafana_data dir belongs to 
     ports:
       - "3000:3000"
     volumes:

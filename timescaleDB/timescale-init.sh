@@ -29,10 +29,11 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER"  --dbname "$POSTGRES_DB"<<-E
   );
 
 
-  CREATE UNIQUE INDEX ON parking_transactions (transaction_id, entry_timestamp);
+ 
   
-  SELECT create_hypertable('parking_transactions', 'entry_timestamp');
+  SELECT * from create_hypertable('parking_transactions', 'entry_timestamp');
 
+  CREATE UNIQUE INDEX ON parking_transactions (transaction_id, entry_timestamp);
   
   CREATE INDEX ON parking_transactions (parking_lot_id); 
   CREATE INDEX ON parking_transactions (user_id);

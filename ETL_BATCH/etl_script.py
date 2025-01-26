@@ -95,13 +95,19 @@ def merge_data(data_timescale, parking_lots, users, owner):
 
     
 def import_data_into_click_house(data):
-    query = """
-    INSERT INTO parking_db.parking_analytics (owner_id, owner_full_name, parking_lot_id, parking_lot_name, parking_spot_number, user_id, user_full_name, entry_timestamp, leaving_timestamp, checkout_price)
-    VALUES
-    """
-    values = ', '.join(f"('{entry['owner_id']}', '{entry['owner_full_name']}', '{entry['parking_lot_id']}', '{entry['parking_lot_name']}', '{entry['parking_spot_number']}', '{entry['user_id']}', '{entry['user_full_name']}', '{entry['entry_timestamp']}', '{entry['leaving_timestamp']}','{entry['checkout_price']}'  )" for entry in data)
-    query += values
-    client.command(query)
+    def chunk_data(data, chunk_size=100):
+        for i in range(0, len(data), chunk_size):
+            yield data[i:i + chunk_size]
+
+    for chunk in chunk_data(data):
+        query = """
+        INSERT INTO parking_db.parking_analytics (owner_id, owner_full_name, parking_lot_id, parking_lot_name, parking_spot_number, user_id, user_full_name, entry_timestamp, leaving_timestamp, checkout_price)
+        VALUES
+        """
+        values = ', '.join(f"('{entry['owner_id']}', '{entry['owner_full_name']}', '{entry['parking_lot_id']}', '{entry['parking_lot_name']}', '{entry['parking_spot_number']}', '{entry['user_id']}', '{entry['user_full_name']}', '{entry['entry_timestamp']}', '{entry['leaving_timestamp']}','{entry['checkout_price']}'  )" for entry in chunk)
+        query += values
+        client.command(query)
+
 
 
 

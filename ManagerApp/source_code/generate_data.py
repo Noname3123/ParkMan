@@ -2,6 +2,7 @@ from faker import Faker
 import requests
 from datetime import datetime, timedelta
 import random
+import time as tm
 
 fake = Faker()
 
@@ -65,13 +66,20 @@ def generate_reservations(users_list, parking_spots, reservation_count):
 #----------------------------------------------------------------------------------------------------
 
 def post_data(url, data_list):
-    for data in data_list:
-        response = requests.post(url, json = data, headers={'Host': hostname}) #NOTE: added hostname due to traefik communication rule
+    import concurrent.futures
+    start=tm.time()
+    def post_single_data(url, data):
+        response = requests.post(url, json=data, headers={'Host': hostname})
         if response.status_code in [200, 201]:
             print(f'Successfully posted to {url}: {data}')
         else:
             print(f'Failed to post to {url}: {data}, Status Code: {response.status_code}')
 
+    with concurrent.futures.ThreadPoolExecutor(max_workers=32) as executor:
+        futures = [executor.submit(post_single_data, url, data) for data in data_list]
+        concurrent.futures.wait(futures)
+
+    print(f"Done with posting - duration: {tm.time()-start}\n\n\n")
 #----------------------------------------------------------------------------------------------------
 #   Get Data from API - used for ID reference cohesion
 #----------------------------------------------------------------------------------------------------
@@ -92,27 +100,27 @@ def get_data(url):
 if __name__ == "__main__":
     #Generate and Post the fake data
     print("Registering Owners...")
-    owners = generate_owners(2)
+    owners = generate_owners(6400)
     post_data(f'{base_url_owner}/owners', owners)
 
     print("Adding Parking Lots...")
     parking_lot_owner_ids = get_data(f'{base_url_owner}/owners/ALL')
-    parking_lots = generate_parking_lots(5, parking_lot_owner_ids)
+    parking_lots = generate_parking_lots(1920, parking_lot_owner_ids)
     post_data(f'{base_url_owner}/parking_lots', parking_lots)
 
     print("Adding Parking Spots...")
     lot_ids_for_spots = get_data(f'{base_url_owner}/parking_lots/ALL')
-    parking_spots = generate_parking_spots(100, lot_ids_for_spots)
+    parking_spots = generate_parking_spots(100000, lot_ids_for_spots)
     post_data(f'{base_url_owner}/parking_spots', parking_spots)
 
     print("Registering Users...")
-    users = generate_users(10)
+    users = generate_users(15000)
     post_data(f'{base_url_user}/register', users)
 
     users_ids = get_data(f'{base_url_owner}/users/ALL')
     spots_data = get_data(f'{base_url_owner}/parking_spots/ALL')
     print("Simulating Reservations...")
-    reservations = generate_reservations(users_ids, spots_data, 20)
+    reservations = generate_reservations(users_ids, spots_data, 100000)
 
     for reservation in reservations:
         response = requests.post(f'{base_url_user}/reserve',
