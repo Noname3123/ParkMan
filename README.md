@@ -141,7 +141,7 @@ o   sigurnost, voditelj se logira sa odgovarajućim credentials-ima
 
  
 
-                              Osoba koja parkira:
+Osoba koja parkira:
 
 o   Mobilna aplikacija ima “where is my car” funkciju, gdje za svako mjesto pamti registraciju auta pa osoba može pronaći svoju registraciju i broj parking mjesta
 
