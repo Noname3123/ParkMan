@@ -127,7 +127,7 @@ Faza 5 (1.0):
 
 Dodatne funkcionalnosti koje bi se dodale u finalnoj verziji aplikacije:
 
-                              Voditelj parkirališta:
+Voditelj parkirališta: 
 
 o   voditelj parkirališta može određena mjesta posebno označiti (npr. rezervirano za stanovnika, rezervirano za invalide…)
 
