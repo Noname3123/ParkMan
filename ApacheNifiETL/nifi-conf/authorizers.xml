@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<authorizers>
+    <authorizer>
+        <identifier>managed-authorizer</identifier>
+        <class>org.apache.nifi.authorization.FileAuthorizer</class>
+        <property name="Authorizations File">./conf/authorizations.xml</property>
+        <property name="Users File">./conf/nifi-users.xml</property>
+        <property name="Initial Admin Identity">admin</property>
+        <property name="Legacy Authorized Users File"></property>
+        <property name="Node Identity 1"></property>
+    </authorizer>
+</authorizers>

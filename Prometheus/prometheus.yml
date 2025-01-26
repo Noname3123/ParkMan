@@ -1,0 +1,36 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'traefik'
+    static_configs:
+      - targets: ['traefik:8080']
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx_exporter:9113']
+
+  - job_name: 'mongo_manager_db_service'
+    static_configs:
+      - targets: ['mongodb-exporter-manager-db:9216']
+
+  - job_name: 'mongo_user_db_service'
+    static_configs:
+      - targets: ['mongodb-exporter-user-db:9216']
+
+  
+  - job_name: 'timescaledb'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+  
+  - job_name: 'clickhouse'
+    static_configs:
+      - targets: ['clickhouse:9363']
+
+  - job_name: 'ETL processing'
+    static_configs:
+      - targets: ['etl_container:9395']

@@ -1,0 +1,265 @@
+version: '3'
+
+services:
+  manager_app:
+    container_name: manager_app
+    build:
+      context: ./ManagerApp
+      dockerfile: app.dockerfile
+    networks:
+      - app-network
+
+
+
+    depends_on:
+      mongo_manager_db_service:
+        condition: service_healthy
+      mongo_user_db_service:
+        condition: service_healthy
+      park_transactions_db:
+        condition: service_healthy
+    env_file:
+      - ./ManagerApp/.env
+      - ./mongoDB/.env.shared.ManagerApp
+      - ./timescaleDB/.env.shared.ManagerApp
+      - ./redis/.env.shared.ManagerApp.MobileApp
+  traefik:
+    image: traefik:v3.1
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --accesslog=true
+      - --api=true
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --metrics.prometheus=true
+      - --metrics.prometheus.buckets=0.1,0.3,1.2,5.0
+      - --metrics.prometheus.addEntryPointsLabels=true
+      - --accesslog
+    ports:
+      - 8001:80
+      - 8080:8080
+      - 10010:10010
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-network
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: nginx.dockerfile
+    depends_on:
+      - manager_app
+      - mobile_app
+      - sensor_app
+    networks:
+      - app-network
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.nginx.rule= Host(`parkman.localhost`)
+      - traefik.http.routers.nginx.entrypoints=web
+      - traefik.http.services.nginx.loadbalancer.server.port=80
+    healthcheck:
+      test: service nginx status || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  mongo_manager_db_service_unpartitioned:
+    build: ./mongoDB
+    profiles:
+      - unpartitionedDB
+    container_name: mongo_manager_db_service_unpartitioned
+    env_file:
+      - ./mongoDB/.env.shared.express.ManagerDB
+      - ./mongoDB/.env.shared.ManagerApp
+      - ./mongoDB/.ManagerDB.env
+      - ./mongoDB/.ManagerDB.UserDB.env.shared
+    ports:
+      - ${MONGO_PORT_MANAGERDB}:27017
+    volumes:
+      - mongo_data_managerDB:/data/db
+    command:
+      - mongod
+      - --bind_ip_all
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --eval
+        - 'db.getMongo().getDB(process.env.MONGO_DATABASE_NAME) ? quit(0) : quit(1)'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  mongo_user_db_service_unpartitioned:
+    build: ./mongoDB
+    container_name: mongo_user_db_service_unpartitioned
+    profiles:
+      - unpartitionedDB
+    env_file:
+      - ./mongoDB/.env.shared.express.UserDB
+      - ./mongoDB/.env.shared.MobileApp
+      - ./mongoDB/.UserDB.env
+      - ./mongoDB/.ManagerDB.UserDB.env.shared
+    ports:
+      - ${MONGO_PORT_USERDB}:27017
+    volumes:
+      - mongo_data_userDB:/data/db
+    command:
+      - mongod
+      - --bind_ip_all
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --eval
+        - 'db.getMongo().getDB(process.env.MONGO_DATABASE_NAME) ? quit(0) : quit(1)'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  mongo-express:
+    image: mongo-express
+    container_name: mexpress
+    env_file:
+      - ./mongoDB/.env.express.ManagerDB
+      - ./mongoDB/.env.shared.express.ManagerDB
+    restart: unless-stopped
+    ports:
+      - ${MONGO_EXPRESS_PORT_MANAGERDB}:8081
+    depends_on:
+      mongo_manager_db_service:
+        condition: service_healthy
+      mongo_user_db_service:
+        condition: service_healthy
+    networks:
+      - app-network
+  mongo-express_userDB:
+    image: mongo-express
+    container_name: mexpress_userDB
+    env_file:
+      - ./mongoDB/.env.express.UserDB
+      - ./mongoDB/.env.shared.express.UserDB
+    restart: unless-stopped
+    ports:
+      - ${MONGO_EXPRESS_PORT_USERDB}:8081
+    depends_on:
+      mongo_manager_db_service:
+        condition: service_healthy
+      mongo_user_db_service:
+        condition: service_healthy
+    networks:
+      - app-network
+  mobile_app:
+    container_name: mobile_app
+    build:
+      context: ./MobileApp
+      dockerfile: app.dockerfile
+    networks:
+      - app-network
+    depends_on:
+      mongo_user_db_service:
+        condition: service_healthy
+      park_transactions_db:
+        condition: service_healthy
+    env_file:
+      - ./redis/.env.shared.ManagerApp.MobileApp
+      - ./MobileApp/.env
+      - ./mongoDB/.env.shared.MobileApp
+      - ./timescaleDB/.env.shared.MobileApp
+  park_transactions_db:
+    build: ./timescaleDB
+    restart: always
+    ports:
+      - ${TIMESCALEDB_PORT}:5432
+    env_file:
+      - ./timescaleDB/.env.shared.ManagerApp
+    volumes:
+      - timescaleDB:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready
+        - -U
+        - postgres_user
+        - -d
+        - ParkingTransactionsDB
+
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  redis_parking_spots_status:
+    build: ./redis
+    container_name: redis_parking_spots_status
+    restart: always
+    ports:
+      - ${REDIS_PORT}:6379
+    env_file:
+      - ./redis/.env.shared.ManagerApp.MobileApp
+    volumes:
+      - redis_DB_parking_spot_status:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      - MANAGER_HOST=manager_app
+      - MANAGER_PORT=80
+      - SENSOR_HOST=sensor_app
+      - SENSOR_POST=80
+    depends_on:
+      nginx:
+        condition: service_healthy
+
+  sensor_app:
+    container_name: sensor_app
+    build:
+      context: ./Sensors
+      dockerfile: app.dockerfile
+    env_file:
+      - ./Sensors/.env
+    networks:
+      - app-network
+#    Not sure if Redis has to be routed with Traefik, so I'm leaving this part commented:configs:
+#    ports:
+#      - "8082:80"
+#    labels:
+#      - traefik.enable=true
+#      - traefik.http.routers.sensor.rule=Host('sensor.localhost')
+#      - traefik.http.routers.sensor.entrypoints=web
+#      - traefik.http.services.sensor.loadbalancer.server.port=80
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    user: "1000" #id of user to which ./Grafana/grafana_data dir belongs to 
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./Grafana/grafana_data:/var/lib/grafana
+      - ./Grafana/ForManager/grafana-provisioning:/etc/grafana/provisioning
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
+    depends_on:
+      - clickhouse
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge  # Use the default bridge network driver
+
+volumes:
+  mongo_data_managerDB: {}
+  mongo_data_userDB: {}
+  timescaleDB: {}
+  redis_DB_parking_spot_status: {}

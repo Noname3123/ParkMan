@@ -1,0 +1,8 @@
+
+psycopg2-binary
+python-dotenv
+requests
+pymongo
+clickhouse-connect
+prometheus_client
+schedule

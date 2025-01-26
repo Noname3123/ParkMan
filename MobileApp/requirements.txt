@@ -1,0 +1,7 @@
+
+Flask
+psycopg2
+python-dotenv
+requests
+pymongo
+redis

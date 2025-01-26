@@ -1,0 +1,1 @@
+*/3 * * * * /usr/local/bin/python /app/etl_script.py 2>&1

@@ -1,0 +1,73 @@
+
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<users>
+  <!-- Define the admin user -->
+  <user>
+    <identifier>admin</identifier>
+    <identity>admin</identity>
+    <justCreated>false</justCreated>
+  </user>
+
+  <!-- Define policies for the admin user -->
+  <policies>
+    <!-- Access the controller -->
+    <policy>
+      <resource>/flow</resource>
+      <action>read</action>
+      <users>
+        <user>admin</user>
+      </users>
+    </policy>
+    <policy>
+      <resource>/flow</resource>
+      <action>write</action>
+      <users>
+        <user>admin</user>
+      </users>
+    </policy>
+    <policy>
+      <resource>/flow</resource>
+      <action>delete</action>
+      <users>
+        <user>admin</user>
+      </users>
+    </policy>
+
+    <!-- Access to resources and services -->
+    <policy>
+      <resource>/provenance</resource>
+      <action>read</action>
+      <users>
+        <user>admin</user>
+      </users>
+    </policy>
+    <policy>
+      <resource>/controller</resource>
+      <action>read</action>
+      <users>
+        <user>admin</user>
+      </users>
+    </policy>
+    <policy>
+      <resource>/controller</resource>
+      <action>write</action>
+      <users>
+        <user>admin</user>
+      </users>
+    </policy>
+    <policy>
+      <resource>/counters</resource>
+      <action>read</action>
+      <users>
+        <user>admin</user>
+      </users>
+    </policy>
+    <policy>
+      <resource>/policies</resource>
+      <action>write</action>
+      <users>
+        <user>admin</user>
+      </users>
+    </policy>
+  </policies>
+</users>
