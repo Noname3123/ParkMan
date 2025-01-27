@@ -66,7 +66,7 @@ Proširenje faze 1, dodaje se ~SQL~ *columnar NoSQL* baza, koja se koristi za an
 
 ·       **Voditelj ima pristup dashboardu** *(ali je dashboard jednostavan)*
 
-·        **na dashboardu se za izabrani park za parking može vidjeti zarada** *(samo ukupna)* ~(po vremenu - dan, mjesec, godina), trenutna zauzetost parkinga te kretanje zauzetosti kroz vrijeme (peak hours) za prethodne dane (otkako je parking otvoren)~ ***dodatno se za parking može vidjeti koliki je ukupni promet bio na tom parkingu***
+·        **na dashboardu se za ~izabrani~ (svaki) park za parking može vidjeti zarada** *(samo ukupna)* ~(po vremenu - dan, mjesec, godina), trenutna zauzetost parkinga te kretanje zauzetosti kroz vrijeme (peak hours) za prethodne dane (otkako je parking otvoren)~ ***dodatno se za parking može vidjeti koliki je ukupni promet bio na tom parkingu***
 
 ·        ~batch processing na kraju tjedna izračunava kumulativno stanje parkinga (zarada, avg peag hour)~
 ·        ***batch processing svake 3 minute (trebao bi svaka 24 sata u produkciji) izvršava ETL i puni NoSQL analitičku bazu, iz koje se pomoću dashboarda mogu dobiti upiti za parking.***
