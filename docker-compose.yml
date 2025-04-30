@@ -256,6 +256,7 @@ services:
 
 networks:
   app-network:
+    name: "app-network"
     driver: bridge  # Use the default bridge network driver
 
 volumes:

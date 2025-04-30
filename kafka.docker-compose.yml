@@ -2,6 +2,7 @@ version: '3'
 
 networks:
   app-network:
+    name: "app-network"
     driver: bridge  #TODO: remove this line after merging with docker-compose.yml
 
 volumes:

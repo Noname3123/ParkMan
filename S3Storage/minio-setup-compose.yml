@@ -1,0 +1,29 @@
+
+version: '3'
+
+networks: 
+  app-network:
+    external: true
+
+volumes:
+  minio_data:
+
+services:
+  
+
+  minio-setup-client: # Helper to setup MinIO buckets/policies on first run
+      image: minio/mc
+      container_name: minio-client
+      
+      networks:
+        - app-network
+      environment:
+        MINIO_ENDPOINT: 'minio:9901'
+        
+      env_file:
+        - ./minio.env
+
+      entrypoint: ["/scripts/minio-setup.sh"] 
+      volumes:
+        - ./minio-init:/config # Mount init scripts/configs here
+        - ./minio-setup.sh:/scripts/minio-setup.sh
