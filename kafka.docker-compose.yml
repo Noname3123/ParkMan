@@ -1,0 +1,38 @@
+version: '3'
+
+networks:
+  app-network:
+    driver: bridge  #TODO: remove this line after merging with docker-compose.yml
+
+volumes:
+  kafka_data:
+  zookeeper_data:
+
+services:
+  # --- Infrastructure Services (largely unchanged) ---
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.2
+    container_name: zookeeper
+    networks:
+      - app-network
+    env_file:
+        - ./Kafka/zookeeper.env
+      
+    volumes:
+      - zookeeper_data:/bitnami/zookeeper
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.2
+    container_name: kafka
+    networks:
+      - app-network
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    env_file:
+        - ./Kafka/kafka.env
+      
+    volumes:
+      - kafka_data:/var/lib/kafka/data
