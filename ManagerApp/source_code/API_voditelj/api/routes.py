@@ -3,6 +3,7 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 from bson import ObjectId
+from datetime import datetime # Added for timestamping
 import redis
 
 api = Blueprint('api', __name__)
@@ -94,8 +95,13 @@ def add_parking_lot():
     #Create a Redis hash for the new parking lot, with a placeholder
     lot_id_str = str(result.inserted_id)
     lot_key = f"parking_lot:{lot_id_str}"
+    timestamp = datetime.utcnow().isoformat()
 
-    redis_client.hset(lot_key, "false", "false")
+    redis_client.hset(lot_key, mapping={
+        "car_num": 0,  # New lots start with 0 cars
+        "update_timestamp": timestamp,
+        "parking_spot_num": 0  # New lots start with 0 parking spots
+    })
 
     return jsonify({"message": "Parking lot added", "id": lot_id_str}), 201
 
@@ -121,6 +127,10 @@ def get_parking_lot(lot_id):
         parking_lot =[str(id) for id in parking_lots_collection.distinct('_id')]
     else:
         parking_lot = parking_lots_collection.find_one({"_id": ObjectId(lot_id)}, {"_id": 0}) #{"_id: 0"} - Exclude the ID of the owner when outputing result
+        
+        #turn parking space list of ObjectIDs into list of strings
+        parking_lot["parking_spaces"]=[str(id) for id in parking_lot["parking_spaces"]]
+    
     if parking_lot:
         return jsonify(parking_lot)
     else:
@@ -147,11 +157,13 @@ def add_parking_spot():
         {"$push": {"parking_spaces": result.inserted_id}}
     )
 
-    #Add a new field in Redis for this spot, making occupancy as "false"
+    # Increment the parking_spot_num in Redis for this lot
     lot_key = f"parking_lot:{data['parking_lot']}"
-    spot_id_str = str(result.inserted_id)
+    redis_client.hincrby(lot_key, "parking_spot_num", 1)
 
-    redis_client.hset(lot_key, f"spot_{spot_id_str}", "false")
+    # Update the timestamp for the lot as its structure has changed
+    timestamp = datetime.utcnow().isoformat()
+    redis_client.hset(lot_key, "update_timestamp", timestamp)
 
     return jsonify({"message": "Parking spot added", "id": str(result.inserted_id)}), 201
 

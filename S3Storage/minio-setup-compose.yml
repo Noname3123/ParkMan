@@ -2,7 +2,7 @@
 version: '3'
 
 networks: 
-  app-network:
+  cv-network:
     external: true
 
 volumes:
@@ -16,7 +16,7 @@ services:
       container_name: minio-client
       
       networks:
-        - app-network
+        - cv-network
       environment:
         MINIO_ENDPOINT: 'minio:9901'
         

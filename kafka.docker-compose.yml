@@ -1,9 +1,10 @@
 version: '3'
 
 networks:
-  app-network:
-    name: "app-network"
-    driver: bridge  #TODO: remove this line after merging with docker-compose.yml
+  cv-network:
+    #name: "app-network"
+    #driver: bridge  #TODO: remove this line after merging with docker-compose.yml
+    external: true
 
 volumes:
   kafka_data:
@@ -16,7 +17,7 @@ services:
     image: confluentinc/cp-zookeeper:7.3.2
     container_name: zookeeper
     networks:
-      - app-network
+      - cv-network
     env_file:
         - ./Kafka/zookeeper.env
       
@@ -27,7 +28,7 @@ services:
     image: confluentinc/cp-kafka:7.3.2
     container_name: kafka
     networks:
-      - app-network
+      - cv-network
     depends_on:
       - zookeeper
     ports:

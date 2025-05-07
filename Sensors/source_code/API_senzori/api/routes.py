@@ -40,31 +40,35 @@ def update_spot_status():
     """
     Expects JSON payload:
     {
-        "lot_id": "123"
-        "spot_id": "A1",
-        "occupied": true/false,
+        "lot_id": "string",
+        "car_num": integer, // The current number of cars in the lot
         "timestamp": "optional ISO timestamp"  // if not provided, current time will be used
     }
     """
     data = request.get_json()
     lot_id = data.get('lot_id')
-    spot_id = data.get('spot_id')
-    occupied = data.get('occupied')
     timestamp = data.get('timestamp') or datetime.utcnow().isoformat()
 
-    if not lot_id or not spot_id or not occupied:
-        return jsonify({"message": "Missing required fields: lot_id, spot_id or occupied"}), 400
-    
-    #Convert booleans to 'true'/'false'
-    occupied_str = 'true' if occupied else 'false'
+    if not lot_id:
+        return jsonify({"message": "Missing required fields: lot_id"}), 400
+
+    car_num = data.get('car_num')
+    if car_num is None: # Check if car_num is provided
+        return jsonify({"message": "Missing required field: car_num"}), 400
+
+    try:
+        # Ensure car_num is an integer
+        car_num_int = int(car_num)
+    except ValueError:
+        return jsonify({"message": "Invalid format for car_num, must be an integer."}), 400
 
     lot_key = f"parking_lot:{lot_id}"
-    
-    #Set the status in the lot's hash
-    redis_client.hset(lot_key, f"spot_{spot_id}", occupied_str)
-    redis_client.hset(lot_key, f"spot_{spot_id}_last_update", timestamp)
+    redis_client.hset(lot_key, mapping={
+        "car_num": car_num_int,
+        "update_timestamp": timestamp
+    })
+    return jsonify({"message": f"Spot data updated in lot {lot_id}"})
 
-    return jsonify({"message": f"Spot {spot_id} updated in lot {lot_id}"})
 
 ###############################################################################
 # Retrieving ALL spot statuses for a given LOT from Redis
@@ -73,48 +77,26 @@ def update_spot_status():
 @sensor_api.route('/lot_status/<string:lot_id>', methods=['GET'])
 def get_lot_status(lot_id):
     """
-    Return the status (occupied/free) of all spots in a given lot.
-    Data is assumed to be stored in a Redis hash 'parking_lot:<lot_id>'.
+    Return the aggregated status of a given parking lot from Redis.
+    Data is stored in a Redis hash 'parking_lot:<lot_id>'.
     Fields are:
-        spot_<spot_id> -> "true"/"false"
-        spot_<spot_id>_last_update -> <timestamp>
+        car_num -> integer (current number of cars)
+        update_timestamp -> ISO string (last update time)
+        parking_spot_num -> integer (total number of spots in the lot)
     """
     lot_key = f"parking_lot:{lot_id}"
     if not redis_client.exists(lot_key):
-        return jsonify({"message": f"Parking lot {lot_id} not found."})
-    
-    spot_data = redis_client.hgetall(lot_key)
-    """
-    Example of spot_data:
-    {
-        "spot_A1": "true",
-        "spot_A1_last_update": "2025-01-21T13:45:00Z",
-        "spot_B3": "false",
-        "spot_B1_last_update": "2025-01-21T13:50:00Z",
-        ...
-    }
-    """
-    aggregated_spots = {}
-    for field, value in spot_data.items():
-        if field.startswith("spot_"):
-        # Split by '_' => ["spot", "<spot_id>"] or ["spot", "<spot_id>", "last_update"]
-            parts = field.split("_", 2)
-            if len(parts) == 2:
-                # e.g. field = "spot_A1" => parts = ["spot", "A1"]
-                s_id = parts[1]
-                if s_id not in aggregated_spots:
-                    aggregated_spots[s_id] = {"occupied": None, "last_update": None}
-                aggregated_spots[s_id]["occupied"] = value
-            elif len(parts) == 3:
-                # e.g. field = "spot_A1_last_update"
-                s_id = parts[1]
-                if s_id not in aggregated_spots:
-                    aggregated_spots[s_id] = {"occupied": None, "last_update": None}
-                aggregated_spots[s_id]["last_update"] = value
-    
+        return jsonify({"message": f"Parking lot {lot_id} not found in Redis."}), 404
+
+    lot_data = redis_client.hgetall(lot_key)
+    car_num_str = lot_data.get("car_num")
+    parking_spot_num_str = lot_data.get("parking_spot_num")
+
     return jsonify({
         "lot_id": lot_id,
-        "spots": aggregated_spots
+        "car_num": int(car_num_str) if car_num_str is not None else None,
+        "update_timestamp": lot_data.get("update_timestamp"),
+        "parking_spot_num": int(parking_spot_num_str) if parking_spot_num_str is not None else None
     }), 200
 
 ###############################################################################

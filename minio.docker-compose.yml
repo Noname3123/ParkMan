@@ -2,8 +2,8 @@
 version: '3'
 
 networks: #TODO: remove this after merging with main docker-compose
-  app-network:
-    name: "app-network"
+  cv-network:
+    name: "cv-network"
     driver: bridge
 
 volumes:
@@ -14,7 +14,7 @@ services:
       image: minio/minio:latest
       container_name: minio
       networks:
-        - app-network
+        - cv-network
       env_file:
           -  ./S3Storage/minio.env
       volumes:
