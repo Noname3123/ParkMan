@@ -22,7 +22,7 @@ services:
         - ./Kafka/zookeeper.env
       
     volumes:
-      - zookeeper_data:/bitnami/zookeeper
+      - zookeeper_data:/var/lib/zookeeper
 
   kafka:
     image: confluentinc/cp-kafka:7.3.2
