@@ -17,6 +17,7 @@ services:
         - cv-network
       env_file:
           -  ./S3Storage/minio.env
+          -  ./S3Storage/minio.api-voditelj.shared.env
       volumes:
         - minio_data:/data
       ports:

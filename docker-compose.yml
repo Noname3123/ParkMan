@@ -23,6 +23,7 @@ services:
       - ./mongoDB/.env.shared.ManagerApp
       - ./timescaleDB/.env.shared.ManagerApp
       - ./redis/.env.shared.ManagerApp.MobileApp
+      - ./S3Storage/minio.api-voditelj.shared.env
   traefik:
     image: traefik:v3.1
     command:

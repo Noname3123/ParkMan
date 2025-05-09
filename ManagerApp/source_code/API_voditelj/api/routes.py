@@ -4,6 +4,8 @@ import os
 from dotenv import load_dotenv
 from bson import ObjectId
 from datetime import datetime # Added for timestamping
+from minio import Minio # Added for MinIO integration
+from minio.error import S3Error # Added for MinIO error handling
 import redis
 
 api = Blueprint('api', __name__)
@@ -37,6 +39,22 @@ users_collection=db_external.users
 REDIS_HOST = os.getenv("REDIS_HOST", "redis_parking_spots_status")
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 redis_client = redis.StrictRedis(host = REDIS_HOST, port = REDIS_PORT, decode_responses = True)
+
+#----------------------------------------------------------------------------------------------------
+#   Setting Up MinIO
+#----------------------------------------------------------------------------------------------------
+
+MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9901") # Default if not in Docker or .env
+APP_MINIO_ACCESS_KEY = os.getenv("APP_MINIO_ACCESS_KEY", "apivoditeljuser")
+APP_MINIO_SECRET_KEY = os.getenv("APP_MINIO_SECRET_KEY", "apivoditeljuserPass")  
+MINIO_SECURE = os.getenv("MINIO_SECURE", "False").lower() == "true"
+
+minio_client = Minio(
+    MINIO_ENDPOINT,
+    access_key=APP_MINIO_ACCESS_KEY,
+    secret_key=APP_MINIO_SECRET_KEY,
+    secure=MINIO_SECURE
+)
 
 #----------------------------------------------------------------------------------------------------
 #   Owner Routes
@@ -82,9 +100,58 @@ def add_parking_lot():
     parking_lot = {
         "name": data['name'],
         "geolocation": data['geolocation'],
-        "parking_spaces": [] # Empty list for storing newly added parking spaces
+        "parking_spaces": [], # Empty list for storing newly added parking spaces
+        "camera_info": [],    # Initialize camera_info as an empty list
+        "minio_safe_data_storage": None # Initialize minio_safe_data_storage as None
     }
     result = parking_lots_collection.insert_one(parking_lot)
+    lot_id_obj = result.inserted_id
+    lot_id_str = str(lot_id_obj)
+
+    # --- MinIO Bucket Creation for safe_data_storage ---
+    bucket_name = f"safe-storage-parking-lot-{lot_id_str}"
+    minio_status_message = ""
+    minio_bucket_linked = False
+    try:
+        # Define the lifecycle configuration (e.g., 30-day expiration)
+        lifecycle_config = {
+            "Rules": [
+                {
+                    "Expiration": {"Days": 30},
+                    "ID": "DefaultExpireAfter30Days",
+                    "Filter": {"Prefix": ""}, # Apply to all objects in the bucket
+                    "Status": "Enabled",
+                }
+            ]
+        }
+
+        if not minio_client.bucket_exists(bucket_name):
+            minio_client.make_bucket(bucket_name)
+            minio_status_message = f"MinIO bucket '{bucket_name}' created."
+        else:
+            minio_status_message = f"MinIO bucket '{bucket_name}' already exists."
+        
+        # Link the bucket in the parking lot document
+        update_result = parking_lots_collection.update_one(
+            {"_id": lot_id_obj},
+            {"$set": {"minio_safe_data_storage": bucket_name}}
+        )
+        if update_result.modified_count > 0 or update_result.matched_count > 0 : # Check if linked or already linked
+            minio_bucket_linked = True
+            minio_status_message += " Successfully linked to parking lot."
+            try:
+                minio_client.set_bucket_lifecycle(bucket_name, lifecycle_config)
+                minio_status_message += " Default 30-day lifecycle policy applied."
+            except S3Error as s3_lc_error:
+                minio_status_message += f" WARNING: Failed to apply lifecycle policy to '{bucket_name}': {str(s3_lc_error)}."
+        else: # Should not happen if insert_one was successful
+            minio_status_message += " Failed to link bucket in database."
+    except S3Error as e:
+        minio_status_message = f"WARNING: MinIO bucket '{bucket_name}' creation/linking failed: {str(e)}. 'minio_safe_data_storage' remains unlinked."
+    except Exception as e: # Catch other potential errors during MinIO interaction
+        minio_status_message = f"WARNING: An unexpected error occurred during MinIO setup for bucket '{bucket_name}': {str(e)}. 'minio_safe_data_storage' remains unlinked."
+    # --- End MinIO Bucket Creation ---
+
     #Adding this parking lot to its owner
     if data.get('owner_id'):
         owners_collection.update_one(
@@ -93,7 +160,6 @@ def add_parking_lot():
         )
 
     #Create a Redis hash for the new parking lot, with a placeholder
-    lot_id_str = str(result.inserted_id)
     lot_key = f"parking_lot:{lot_id_str}"
     timestamp = datetime.utcnow().isoformat()
 
@@ -103,7 +169,14 @@ def add_parking_lot():
         "parking_spot_num": 0  # New lots start with 0 parking spots
     })
 
-    return jsonify({"message": "Parking lot added", "id": lot_id_str}), 201
+    response_message = "Parking lot added"
+    response_details = {"id": lot_id_str}
+
+    if minio_bucket_linked:
+        response_details["minio_bucket_name"] = bucket_name
+    response_details["minio_status"] = minio_status_message
+
+    return jsonify({"message": response_message, "details": response_details}), 201
 
 #define get_users API route (so that manager can see info about users)
 @api.route('/users/<string:user_id>', methods = ['GET']) #Defining URL for getting existing owners
@@ -126,15 +199,155 @@ def get_parking_lot(lot_id):
     if lot_id=="ALL": #if search term is "ALL" => give id's of all lots
         parking_lot =[str(id) for id in parking_lots_collection.distinct('_id')]
     else:
-        parking_lot = parking_lots_collection.find_one({"_id": ObjectId(lot_id)}, {"_id": 0}) #{"_id: 0"} - Exclude the ID of the owner when outputing result
-        
-        #turn parking space list of ObjectIDs into list of strings
-        parking_lot["parking_spaces"]=[str(id) for id in parking_lot["parking_spaces"]]
+        # Fetch without projection first to handle complex types, then apply projection if needed (or remove it)
+        # For consistency with other GET routes, keep the {"_id": 0} projection.
+        parking_lot_doc = parking_lots_collection.find_one({"_id": ObjectId(lot_id)})
+        if parking_lot_doc:
+            parking_lot = parking_lot_doc.copy() # Work on a copy
+            del parking_lot["_id"] # Apply the exclusion of _id
+
+            parking_lot["parking_spaces"]=[str(id) for id in parking_lot.get("parking_spaces", [])]
+            if "camera_info" in parking_lot and parking_lot["camera_info"]:
+                for camera in parking_lot["camera_info"]:
+                    if "camera_id" in camera and isinstance(camera["camera_id"], ObjectId):
+                        camera["camera_id"] = str(camera["camera_id"])
     
     if parking_lot:
         return jsonify(parking_lot)
     else:
         return jsonify({"message": "Parking lot not found"}), 404
+
+#----------------------------------------------------------------------------------------------------
+#   Parking Lot Camera Routes
+#----------------------------------------------------------------------------------------------------
+
+@api.route('/parking_lots/<string:lot_id>/cameras', methods=['POST'])
+def add_camera_to_parking_lot(lot_id):
+    data = request.get_json()
+    if not data or not data.get('camera_name') or not data.get('camera_link'):
+        return jsonify({"message": "Missing required fields: camera_name or camera_link"}), 400
+
+    try:
+        object_lot_id = ObjectId(lot_id)
+    except Exception:
+        return jsonify({"message": "Invalid parking lot ID format"}), 400
+
+    parking_lot = parking_lots_collection.find_one({"_id": object_lot_id})
+    if not parking_lot:
+        return jsonify({"message": "Parking lot not found"}), 404
+
+    new_camera_id = ObjectId()
+    camera_data = {
+        "camera_id": new_camera_id,
+        "camera_name": data['camera_name'],
+        "camera_link": data['camera_link'] # As per spec, all cameras ref to same bucket (link is the ref string)
+    }
+
+    result = parking_lots_collection.update_one(
+        {"_id": object_lot_id},
+        {"$push": {"camera_info": camera_data}}
+    )
+
+    if result.modified_count:
+        return jsonify({"message": "Camera added to parking lot", "camera_id": str(new_camera_id)}), 201
+    else:
+        return jsonify({"message": "Failed to add camera"}), 500
+
+@api.route('/parking_lots/<string:lot_id>/cameras/<string:camera_id>', methods=['DELETE'])
+def remove_camera_from_parking_lot(lot_id, camera_id):
+    try:
+        object_lot_id = ObjectId(lot_id)
+        object_camera_id = ObjectId(camera_id)
+    except Exception:
+        return jsonify({"message": "Invalid ID format for parking lot or camera"}), 400
+
+    result = parking_lots_collection.update_one(
+        {"_id": object_lot_id},
+        {"$pull": {"camera_info": {"camera_id": object_camera_id}}}
+    )
+
+    if result.modified_count:
+        return jsonify({"message": "Camera removed from parking lot"}), 200
+    else:
+        # Could be lot not found, or camera not found in lot
+        parking_lot = parking_lots_collection.find_one({"_id": object_lot_id})
+        if not parking_lot:
+            return jsonify({"message": "Parking lot not found"}), 404
+        return jsonify({"message": "Camera not found in parking lot or no change made"}), 404
+
+@api.route('/parking_lots/<string:lot_id>/cameras/<string:camera_id>', methods=['PUT'])
+def modify_camera_in_parking_lot(lot_id, camera_id):
+    data = request.get_json()
+    if not data:
+        return jsonify({"message": "No data provided for update"}), 400
+
+    try:
+        object_lot_id = ObjectId(lot_id)
+        object_camera_id = ObjectId(camera_id)
+    except Exception:
+        return jsonify({"message": "Invalid ID format for parking lot or camera"}), 400
+
+    update_fields = {}
+    if 'camera_name' in data:
+        update_fields['camera_info.$[elem].camera_name'] = data['camera_name']
+    if 'camera_link' in data:
+        update_fields['camera_info.$[elem].camera_link'] = data['camera_link']
+
+    if not update_fields:
+        return jsonify({"message": "No fields to update provided"}), 400
+
+    result = parking_lots_collection.update_one(
+        {"_id": object_lot_id, "camera_info.camera_id": object_camera_id},
+        {"$set": update_fields},
+        array_filters=[{"elem.camera_id": object_camera_id}]
+    )
+
+    if result.matched_count == 0: # Check matched_count first
+        return jsonify({"message": "Parking lot or camera not found"}), 404
+    if result.modified_count:
+        return jsonify({"message": "Camera updated successfully"}), 200
+    else:
+        return jsonify({"message": "Camera data is the same, no update performed"}), 200 # Or 304 Not Modified
+
+@api.route('/parking_lots/<string:lot_id>/safe_storage', methods=['POST'])
+def create_safe_data_storage(lot_id):
+    try:
+        object_lot_id = ObjectId(lot_id)
+    except Exception:
+        return jsonify({"message": "Invalid parking lot ID format"}), 400
+
+    bucket_name = f"safe-storage-parking-lot-{lot_id}"
+
+    try:
+        # Define the lifecycle configuration (e.g., 30-day expiration)
+        lifecycle_config = {
+            "Rules": [
+                {
+                    "Expiration": {"Days": 30},
+                    "ID": "DefaultExpireAfter30Days",
+                    "Filter": {"Prefix": ""}, # Apply to all objects in the bucket
+                    "Status": "Enabled",
+                }
+            ]
+        }
+        lifecycle_applied_message = ""
+
+        if not minio_client.bucket_exists(bucket_name):
+            minio_client.make_bucket(bucket_name)
+        
+        minio_client.set_bucket_lifecycle(bucket_name, lifecycle_config)
+        lifecycle_applied_message = " Default 30-day lifecycle policy applied."
+        
+        parking_lots_collection.update_one(
+            {"_id": object_lot_id},
+            {"$set": {"minio_safe_data_storage": bucket_name}}
+        )
+        return jsonify({"message": f"Safe data storage created and linked.{lifecycle_applied_message}", "bucket_name": bucket_name}), 201
+    except S3Error as e:
+        # Check if the error is because the lifecycle already exists and is identical, which can be ignored.
+        return jsonify({"message": f"MinIO error: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"message": f"An unexpected error occurred: {str(e)}"}), 500
 
 #----------------------------------------------------------------------------------------------------
 #   Parking Spot Routes
@@ -179,8 +392,8 @@ def get_parking_spot(spot_id):
     
     spot = parking_spots_collection.find_one({"_id": ObjectId(spot_id)})
     if spot:
-        spot["_id"] = str(s["_id"])
-        spot["parking_lot"] = str(s["parking_lot"])
+        spot["_id"] = str(spot["_id"]) # Corrected 's' to 'spot'
+        spot["parking_lot"] = str(spot["parking_lot"]) # Corrected 's' to 'spot'
         return jsonify(spot)
     else:
         return jsonify({"message": "Parking spot not found"}), 404

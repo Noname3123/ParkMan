@@ -22,6 +22,7 @@ services:
         
       env_file:
         - ./minio.env
+        - ./minio.api-voditelj.shared.env
 
       entrypoint: ["/scripts/minio-setup.sh"] 
       volumes:
