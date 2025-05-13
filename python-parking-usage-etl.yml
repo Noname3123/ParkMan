@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  etl_container_parking_usage:
+    build: ./ETL_BATCH_PARKING_USAGE
+    container_name: etl_container_parking_usage
+    expose:
+        - "9395"
+    env_file:
+        - ./ETL_BATCH_PARKING_USAGE/.env
+    depends_on:
+        mongo_manager_db_service:
+            condition: service_healthy
+        mongo_user_db_service:
+            condition: service_healthy
+        clickhouse:
+            condition: service_healthy
+        redis_parking_spots_status:
+            condition: service_healthy
+
+    networks:
+        - app-network
