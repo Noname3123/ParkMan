@@ -4,6 +4,8 @@ until (/usr/bin/mc config host add localminio http://"${MINIO_ENDPOINT}" "${MINI
 echo 'MinIO ready, setting up buckets and policies...';
 /usr/bin/mc mb localminio/camera-images || true;
 /usr/bin/mc anonymous set public localminio/camera-images; # TODO:  Example: make camera images public if needed, check if needed
+/usr/bin/mc mb localminio/edited-images || true;
+/usr/bin/mc anonymous set public localminio/edited-images; # TODO:  Example: make camera images public if needed, check if needed
 
 
 echo "Creating user ${APP_MINIO_ACCESS_KEY} for API_voditelj..."

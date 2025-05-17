@@ -15,6 +15,10 @@ services:
       - MINIO_SECRET_KEY=minioadmin
       - BUCKET=camera-images
       - CAR_COUNTER_URL=http://car-counter:5001/process
+    
+    depends_on:
+      - redis_parking_spots_status
+      - kafka
 
 
   car-counter:
@@ -30,9 +34,8 @@ services:
       - YOLO_ENDPOINT=https://nationally-cheerful-pegasus.ngrok-free.app/count_cars
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+    
+    depends_on:
+      - redis_parking_spots_status
 
-networks:
-  cv-network:
-    external: true
-  app-network:
-    external: true
+
