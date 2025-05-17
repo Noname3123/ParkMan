@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  image-processor:
+    build: ./Image_Processing/Image_Processor
+    networks:
+      - cv-network
+    env_file:
+      - ./Image_Processing/.env
+    environment:
+      - KAFKA_BOOTSTRAP=kafka:29092
+      - TOPIC=cctv-image-events
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - BUCKET=camera-images
+      - CAR_COUNTER_URL=http://car-counter:5001/process
+
+
+  car-counter:
+    build: ./Image_Processing/Car_Counter
+    networks:
+      - app-network
+      - cv-network
+    environment:
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - BUCKET=camera-images
+      - YOLO_ENDPOINT=https://nationally-cheerful-pegasus.ngrok-free.app/count_cars
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+networks:
+  cv-network:
+    external: true
+  app-network:
+    external: true

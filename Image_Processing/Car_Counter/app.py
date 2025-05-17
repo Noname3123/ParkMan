@@ -1,4 +1,4 @@
-import os, io, tempfile, requests
+import os, io, requests
 from flask import Flask, request, jsonify
 import redis, boto3
 
@@ -18,7 +18,7 @@ s3 = boto3.client(
     aws_access_key_id=os.environ["MINIO_ACCESS_KEY"],
     aws_secret_access_key=os.environ["MINIO_SECRET_KEY"],
 )
-BUCKET = os.environ["MINIO_BUCKET"]
+BUCKET = os.environ["BUCKET"]
 
 YOLO_ENDPOINT = os.environ["YOLO_ENDPOINT"]
 
@@ -51,3 +51,6 @@ def process():
     r.hset(f"image:{key}", mapping={"car_count": car_cnt})
 
     return jsonify({"image": key, "car_count": car_cnt})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5001)
