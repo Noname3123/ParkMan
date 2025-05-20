@@ -17,7 +17,7 @@ services:
       - CAR_COUNTER_URL=http://car-counter:5001/process
     
     depends_on:
-      - redis_parking_spots_status
+      - minio
       - kafka
 
 
@@ -38,27 +38,27 @@ services:
     depends_on:
       - redis_parking_spots_status
 
-    image-fetcher:
-      build:
-        context: ./Image_Processing/Image_Fetcher
-      networks:
-        - cv-network
-      env_file:
-        - .env
-      depends_on:
-        - kafka
-        - minio
+  image-fetcher:
+    build:
+      context: ./Image_Processing/Image_Fetcher
+    networks:
+      - cv-network
+    env_file:
+      - .env
+    depends_on:
+      - kafka
+      - minio
 
-    image-editor:
-      build:
-        context: ./Image_Processing/Image_Editor
-      networks:
-        - cv-network
-      volumes:
-        - ./Image_Processing/Image_Editor/textures:/app/textures
-      env_file:
-        - .env
-      depends_on:
-        - minio
+  image-editor:
+    build:
+      context: ./Image_Processing/Image_Editor
+    networks:
+      - cv-network
+    volumes:
+      - ./Image_Processing/Image_Editor/textures:/app/textures
+    env_file:
+      - .env
+    depends_on:
+      - minio
 
 
