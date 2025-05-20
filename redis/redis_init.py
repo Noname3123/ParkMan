@@ -88,6 +88,11 @@ def initialize_lot_data(redis_client, lot_id):
 
     park_spot_num=get_parking_spot_number(lot_id)
 
+    #Check if there is a parking lot with no parking spots - stop the method
+    if park_spot_num is None:
+        print(f"Parking lot {lot_key}: has no parking spots")
+        return
+
     # Set car_num and update_timestamp
     # Redis stores values as strings; redis-py handles conversion for numbers.
     # Explicitly using 0 for car_num.

@@ -6,6 +6,7 @@ from bson import ObjectId
 from datetime import datetime # Added for timestamping
 from minio import Minio # Added for MinIO integration
 from minio.error import S3Error # Added for MinIO error handling
+from minio.lifecycleconfig import LifecycleConfig, Rule, Expiration, Filter # Added for MinIO lifecycle
 import redis
 
 api = Blueprint('api', __name__)
@@ -113,17 +114,16 @@ def add_parking_lot():
     minio_status_message = ""
     minio_bucket_linked = False
     try:
-        # Define the lifecycle configuration (e.g., 30-day expiration)
-        lifecycle_config = {
-            "Rules": [
-                {
-                    "Expiration": {"Days": 30},
-                    "ID": "DefaultExpireAfter30Days",
-                    "Filter": {"Prefix": ""}, # Apply to all objects in the bucket
-                    "Status": "Enabled",
-                }
-            ]
-        }
+        # Define the lifecycle configuration using MinIO SDK objects
+        lifecycle_rule= Rule(
+                status="Enabled",
+                rule_filter=Filter(prefix=""),  # Apply to all objects in the bucket
+                rule_id="DefaultExpireAfter30Days",
+                expiration=Expiration(days=30)
+            )
+        config = LifecycleConfig([lifecycle_rule])
+        
+        
 
         if not minio_client.bucket_exists(bucket_name):
             minio_client.make_bucket(bucket_name)
@@ -140,16 +140,17 @@ def add_parking_lot():
             minio_bucket_linked = True
             minio_status_message += " Successfully linked to parking lot."
             try:
-                minio_client.set_bucket_lifecycle(bucket_name, lifecycle_config)
+                # Always try to set/update lifecycle policy
+                minio_client.set_bucket_lifecycle(bucket_name, config)
                 minio_status_message += " Default 30-day lifecycle policy applied."
             except S3Error as s3_lc_error:
                 minio_status_message += f" WARNING: Failed to apply lifecycle policy to '{bucket_name}': {str(s3_lc_error)}."
         else: # Should not happen if insert_one was successful
             minio_status_message += " Failed to link bucket in database."
     except S3Error as e:
-        minio_status_message = f"WARNING: MinIO bucket '{bucket_name}' creation/linking failed: {str(e)}. 'minio_safe_data_storage' remains unlinked."
+       minio_status_message = f"WARNING: MinIO bucket '{bucket_name}' creation/linking failed: {str(e)}. 'minio_safe_data_storage' remains unlinked."
     except Exception as e: # Catch other potential errors during MinIO interaction
-        minio_status_message = f"WARNING: An unexpected error occurred during MinIO setup for bucket '{bucket_name}': {str(e)}. 'minio_safe_data_storage' remains unlinked."
+       minio_status_message = f"WARNING: An unexpected error occurred during MinIO setup for bucket '{bucket_name}': {str(e)}. 'minio_safe_data_storage' remains unlinked."
     # --- End MinIO Bucket Creation ---
 
     #Adding this parking lot to its owner
@@ -319,24 +320,25 @@ def create_safe_data_storage(lot_id):
     bucket_name = f"safe-storage-parking-lot-{lot_id}"
 
     try:
-        # Define the lifecycle configuration (e.g., 30-day expiration)
-        lifecycle_config = {
-            "Rules": [
-                {
-                    "Expiration": {"Days": 30},
-                    "ID": "DefaultExpireAfter30Days",
-                    "Filter": {"Prefix": ""}, # Apply to all objects in the bucket
-                    "Status": "Enabled",
-                }
-            ]
-        }
+        # Define the lifecycle configuration using MinIO SDK objects
+        
+        lifecyce_rule=Rule(
+                status="Enabled",
+                rule_filter=Filter(prefix=""),  # Apply to all objects in the bucket
+                rule_id="DefaultExpireAfter30Days",
+                expiration=Expiration(days=30)
+            )
+        
+        config = LifecycleConfig([lifecyce_rule])
+
         lifecycle_applied_message = ""
 
         if not minio_client.bucket_exists(bucket_name):
             minio_client.make_bucket(bucket_name)
         
-        minio_client.set_bucket_lifecycle(bucket_name, lifecycle_config)
-        lifecycle_applied_message = " Default 30-day lifecycle policy applied."
+        # Set or update the lifecycle policy
+        minio_client.set_bucket_lifecycle(bucket_name, config)
+        lifecycle_applied_message = " Default 30-day lifecycle policy applied/updated."
         
         parking_lots_collection.update_one(
             {"_id": object_lot_id},

@@ -11,6 +11,7 @@ services:
 
 
 
+      - cv-network
     depends_on:
       mongo_manager_db_service:
         condition: service_healthy
