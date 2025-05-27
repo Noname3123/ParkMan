@@ -44,7 +44,7 @@ services:
     networks:
       - cv-network
     env_file:
-      - .env
+      - ./Image_Processing/.env
     depends_on:
       - kafka
       - minio
@@ -57,7 +57,7 @@ services:
     volumes:
       - ./Image_Processing/Image_Editor/textures:/app/textures
     env_file:
-      - .env
+      - ./Image_Processing/.env
     depends_on:
       - minio
 

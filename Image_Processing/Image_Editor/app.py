@@ -1,7 +1,7 @@
 import os, cv2, boto3, random
 import numpy as np
 from io import BytesIO
-from PIl import Image
+from PIL import Image
 
 # ---------------- ENV ------------------
 S3 = boto3.client(
@@ -52,11 +52,11 @@ def overlay_texture(img):
 
 # ---------------- MINIO LOAD/SAVE ------------------
 def list_images_from_s3():
-    response = s3.list_objects_v2(Bucket=BUCKET)
+    response = S3.list_objects_v2(Bucket=BUCKET)
     return [item['Key'] for item in response.get('Contents', []) if item['Key'].lower().endswith(('.jpg', '.jpeg', '.png'))]
 
 def download_image(key):
-    obj = s3.get_object(Bucket=BUCKET, Key=key)
+    obj = S3.get_object(Bucket=BUCKET, Key=key)
     return cv2.imdecode(np.asarray(bytearray(obj['Body'].read()), dtype=np.uint8), cv2.IMREAD_COLOR)
 
 def upload_image(img, original_key, suffix):
@@ -74,12 +74,17 @@ def random_edit_pipeline(img):
     return img, "_".join(func.__name__ for func in selected)
 
 def main():
-    image_keys = list_images_from_s3()
-    for key in random.sample(image_keys, k=min(len(image_keys), 10)):
-        print(f"[INFO] Editing: {key}")
-        img = download_image(key)
-        edited_img, suffix = random_edit_pipeline(img)
-        upload_image(edited_img, key, suffix)
+    try:
+        print("[DEBUG] Listening images from S3...")
+        image_keys = list_images_from_s3()
+        print(f"[DEBUG] Found {len(image_keys)} images.")
+        for key in random.sample(image_keys, k=min(len(image_keys), 10)):
+            print(f"[INFO] Editing: {key}")
+            img = download_image(key)
+            edited_img, suffix = random_edit_pipeline(img)
+            upload_image(edited_img, key, suffix)
+    except Exception as e:
+        print(f"[ERROR] Unexpected crash: {e}")
 
 if __name__ == "__main__":
     main()
