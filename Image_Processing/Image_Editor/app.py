@@ -12,7 +12,6 @@ S3 = boto3.client(
 )
 BUCKET = os.getenv("BUCKET", "camera-images")
 TEXTURE_FOLDER = "./textures"
-AUGMENTED_PREFIX = "augmented/"  # to avoid name collisions
 
 # ---------------- EFFECTS ------------------
 def apply_blur(img):
@@ -21,7 +20,7 @@ def apply_blur(img):
 
 def adjust_brightness(img):
     value = random.uniform(0.5, 1.5)
-    return cv2.convertScaleAbs(img, alpha=value, beza=0)
+    return cv2.convertScaleAbs(img, alpha=value, beta=0)
 
 def adjust_contrast(img):
     value = random.uniform(0.5, 1.5)
@@ -60,7 +59,7 @@ def download_image(key):
     return cv2.imdecode(np.asarray(bytearray(obj['Body'].read()), dtype=np.uint8), cv2.IMREAD_COLOR)
 
 def upload_image(img, original_key, suffix):
-    new_key = f"{AUGMENTED_PREFIX}{os.path.splitext(original_key)[0]}_{suffix}.jpg"
+    new_key = f"{os.path.splitext(original_key)[0]}_{suffix}.jpg"
     _, buffer = cv2.imencode(".jpg", img)
     S3.put_object(Bucket=BUCKET, Key=new_key, Body=buffer.tobytes(), ContentType="image/jpeg")
     print(f"[INFO] Uploaded: {new_key}")
