@@ -54,6 +54,7 @@ services:
         condition: service_started
       minio:
         condition: service_started
+    restart: unless-stopped
 
   image-editor:
     build:
@@ -67,5 +68,6 @@ services:
     depends_on:
       minio:
         condition: service_started
+    restart: unless-stopped
 
 
