@@ -51,4 +51,7 @@ def send_message():
     print(f"[SENT] {msg}")
 
 if __name__ == "__main__":
-    send_message()
+    while True:
+        send_message()
+        print("[DEBUG] Waiting 50 seconds before next messages...")
+        time.sleep(50)
