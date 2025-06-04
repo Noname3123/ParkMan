@@ -1,4 +1,4 @@
-import os, boto3, random, json
+import os, boto3, random, json, time
 from confluent_kafka import Producer
 from pymongo import MongoClient
 
