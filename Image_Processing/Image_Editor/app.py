@@ -86,4 +86,7 @@ def main():
         print(f"[ERROR] Unexpected crash: {e}")
 
 if __name__ == "__main__":
-    main()
+    while True:
+        main()
+        print("[DEBUG] Waiting 30 seconds before next batch...")
+        time.sleep(30)
