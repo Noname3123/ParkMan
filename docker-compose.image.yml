@@ -6,16 +6,7 @@ services:
     networks:
       - cv-network
     env_file:
-      - ./Image_Processing/.env
-    environment:
-      - KAFKA_BOOTSTRAP=kafka:29092
-      - TOPIC=cctv-image-events
-      - MINIO_ENDPOINT=http://minio:9901
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - BUCKET=camera-images
-      - CAR_COUNTER_URL=http://car-counter:5001/process
-    
+      - ./Image_Processing/.env    
     depends_on:
       kafka:
         condition: service_started
@@ -31,14 +22,8 @@ services:
     hostname: car-counter
     ports:
       - "5001:5001"
-    environment:
-      - MINIO_ENDPOINT=http://minio:9901
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - BUCKET=camera-images
-      - YOLO_ENDPOINT=https://nationally-cheerful-pegasus.ngrok-free.app/count_cars
-      - REDIS_HOST=redis_parking_spots_status
-      - REDIS_PORT=6379
+    env_file:
+      - ./Image_Processing/.env  
     depends_on:
       - redis_parking_spots_status
 

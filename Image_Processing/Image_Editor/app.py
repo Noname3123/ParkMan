@@ -10,7 +10,7 @@ S3 = boto3.client(
     aws_access_key_id=os.getenv("MINIO_ACCESS_KEY"),
     aws_secret_access_key=os.getenv("MINIO_SECRET_KEY")
 )
-BUCKET = os.getenv("BUCKET", "camera-images")
+BUCKET = os.getenv("BUCKET_CAMERA", "camera-images")
 TEXTURE_FOLDER = "./textures"
 
 # ---------------- EFFECTS ------------------

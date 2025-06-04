@@ -12,7 +12,7 @@ BUCKET_CAMERA = os.getenv("BUCKET_CAMERA", "camera-images")
 BUCKET_EDIT = os.getenv("BUCKET_EDIT", "edited-images")
 CAR_URL = os.getenv("CAR_COUNTER_URL","http://car-counter:5001/process")
 
-KAFKA_BOOT = os.getenv("KAFKA_BOOT","kafka:29092")
+KAFKA_BOOT = os.getenv("KAFKA_BOOTSTRAP","kafka:29092")
 TOPIC = os.getenv("TOPIC", "cctv-image-events")
 
 
