@@ -6,21 +6,21 @@ app = Flask(__name__)
 
 # ---------- Redis ----------
 r = redis.Redis(
-    host=os.getenv["REDIS_HOST"],
-    port=int(os.getenv["REDIS_PORT"]),
+    host=os.getenv("REDIS_HOST"),
+    port=int(os.getenv("REDIS_PORT")),
     decode_responses=True,
 )
 
 # ---------- MinIO ----------
 s3 = boto3.client(
     "s3",
-    endpoint_url=os.getenv['MINIO_ENDPOINT'],
-    aws_access_key_id=os.getenv["MINIO_ACCESS_KEY"],
-    aws_secret_access_key=os.getenv["MINIO_SECRET_KEY"],
+    endpoint_url=os.getenv('MINIO_ENDPOINT'),
+    aws_access_key_id=os.getenv("MINIO_ACCESS_KEY"),
+    aws_secret_access_key=os.getenv("MINIO_SECRET_KEY"),
 )
-BUCKET = os.getenv["BUCKET_EDIT"]
+BUCKET = os.getenv("BUCKET_EDIT")
 
-YOLO_ENDPOINT = os.getenv["YOLO_ENDPOINT"]
+YOLO_ENDPOINT = os.getenv("YOLO_ENDPOINT")
 
 
 def yolo_remote_count(img_bytes: bytes) -> int:

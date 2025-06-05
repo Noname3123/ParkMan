@@ -9,7 +9,7 @@ services:
       - ./Image_Processing/.env    
     depends_on:
       kafka:
-        condition: service_started
+        condition: service_healthy
       minio:
         condition: service_started
 
@@ -32,11 +32,12 @@ services:
       context: ./Image_Processing/Image_Fetcher
     networks:
       - cv-network
+      - app-network
     env_file:
       - ./Image_Processing/.env
     depends_on:
       kafka:
-        condition: service_started
+        condition: service_healthy
       minio:
         condition: service_started
     restart: unless-stopped

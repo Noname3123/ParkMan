@@ -125,27 +125,27 @@ def get_data(url):
 if __name__ == "__main__":
     #Generate and Post the fake data
     print("Registering Owners...")
-    owners = generate_owners(6400)
+    owners = generate_owners(100)
     post_data(f'{base_url_owner}/owners', owners)
 
     print("Adding Parking Lots...")
     parking_lot_owner_ids = get_data(f'{base_url_owner}/owners/ALL')
-    parking_lots = generate_parking_lots(1920, parking_lot_owner_ids)
+    parking_lots = generate_parking_lots(300, parking_lot_owner_ids)
     post_data(f'{base_url_owner}/parking_lots', parking_lots)
 
     print("Adding Parking Spots...")
     lot_ids_for_spots = get_data(f'{base_url_owner}/parking_lots/ALL')
-    parking_spots = generate_parking_spots(100000, lot_ids_for_spots)
+    parking_spots = generate_parking_spots(3000, lot_ids_for_spots)
     post_data(f'{base_url_owner}/parking_spots', parking_spots)
 
     print("Registering Users...")
-    users = generate_users(15000)
+    users = generate_users(200)
     post_data(f'{base_url_user}/register', users)
 
     users_ids = get_data(f'{base_url_owner}/users/ALL')
     spots_data = get_data(f'{base_url_owner}/parking_spots/ALL')
     print("Simulating Reservations...")
-    reservations = generate_reservations(users_ids, spots_data, 100000)
+    reservations = generate_reservations(users_ids, spots_data, 300)
 
     for reservation in reservations:
         response = requests.post(f'{base_url_user}/reserve',

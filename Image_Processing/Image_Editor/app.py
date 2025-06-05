@@ -16,7 +16,7 @@ TEXTURE_FOLDER = "./textures"
 # ---------------- EFFECTS ------------------
 def apply_blur(img):
     ksize = random.choice([3, 5 ,7])
-    return cv2.GaussianBlue(img, (ksize, ksize), 0)
+    return cv2.GaussianBlur(img, (ksize, ksize), 0)
 
 def adjust_brightness(img):
     value = random.uniform(0.5, 1.5)

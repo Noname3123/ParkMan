@@ -11,4 +11,4 @@ RUN pip install --no-cache-dir opencv-python numpy pillow boto3
 
 COPY . .
 
-CMD ["python", "app.py"]
+CMD ["python", "-u" ,"app.py"]

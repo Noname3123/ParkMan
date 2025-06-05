@@ -3,4 +3,4 @@ WORKDIR /app
 COPY app.py /app/
 RUN pip install --no-cache-dir flask redis boto3 requests python-dotenv
 EXPOSE 5001
-CMD ["python", "app.py"]
+CMD ["python", "-u" ,"app.py"]

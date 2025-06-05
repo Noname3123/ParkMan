@@ -6,4 +6,4 @@ RUN pip install --no-cache-dir boto3 confluent_kafka pymongo python-dotenv
 
 COPY app.py .
 
-CMD ["python", "app.py"]
+CMD ["python", "-u" ,"app.py"]
