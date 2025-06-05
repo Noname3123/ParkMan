@@ -3,8 +3,7 @@ Flask
 requests
 python-dotenv
 pymongo
+minio
 redis
-
 Faker
 schedule
-

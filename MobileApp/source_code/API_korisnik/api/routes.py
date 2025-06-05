@@ -88,30 +88,36 @@ def get_parks(): #TODO: this should be used as get closest park to user's locati
     parks = list(parks_collection.find({}, {"_id": 0})) #{"_id: 0"} - Exclude the ID of the owner when outputing results
     return jsonify(parks)
 
-@user_api.route('/parks', methods = ['GET'])
+# Changed route to prevent conflict with route above #TODO: CHECK WHAT THIS CHANGE MEANS
+@user_api.route('/lots/<string:lot_id>/availability', methods=['GET'])
 def get_free_spots(lot_id):
     """
-    Returns a list of free (unoccupied) spot IDs for a given lot, 
-    based on the Redis hash: parking_lot:<lot_id>.
-    Fields in that hash look like:
-       spot_<spotId> => "false" or "true"
+    Returns the number of available parking spots for a given lot.
+    Data is read from the Redis hash 'parking_lot:<lot_id>', using
+    'car_num' (current occupied spots) and 'parking_spot_num' (total spots).
     """
     lot_key = f"parking_lot:{lot_id}"
     if not redis_client.exists(lot_key):
         return jsonify({"message": f"Lot {lot_id} not found"}), 404
-    
-    #Get data about spots
-    spot_data = redis_client.hgetall(lot_key)
 
-    #Now isolate free spots
-    free_spots = []
-    for field, value in spot_data.items():
-        if field.startswith("spot_") and not field.endswith("_last_update"):
-            if value == "false":
-                _, spot_id_str = field.split("_", 1)
-                free_spots.append(spot_id_str)
+    lot_info = redis_client.hmget(lot_key, "car_num", "parking_spot_num")
+    car_num_str = lot_info[0]
+    parking_spot_num_str = lot_info[1]
 
-    return jsonify({"lot_id": lot_id, "free_spots": free_spots}), 200
+    if car_num_str is None or parking_spot_num_str is None:
+        return jsonify({"message": f"Lot {lot_id} data is incomplete in Redis (missing car_num or parking_spot_num)."}), 500
+
+    try:
+        car_num = int(car_num_str)
+        parking_spot_num = int(parking_spot_num_str)
+    except ValueError:
+        return jsonify({"message": f"Invalid data types for car_num or parking_spot_num in Redis for lot {lot_id}."}), 500
+
+    available_spots = parking_spot_num - car_num
+    # Ensure available_spots is not negative if data is somehow inconsistent
+    available_spots = max(0, available_spots)
+
+    return jsonify({"lot_id": lot_id, "available_spots": available_spots}), 200
 
 @user_api.route('/reserve', methods = ['POST'])
 def reserve():
@@ -123,29 +129,33 @@ def reserve():
     if not parks_collection.find_one({"_id": ObjectId(lot_id)}):
         return jsonify({"message": "No such parking lot found."}), 404
     
-    #If the spot is found, confirm it's not occupied
-    spot_id = data.get("id_parking_spot")
-    if not spot_id:
-        return jsonify({"message": "Missing required field: id_parking_spot"}), 400
-    
-    lot_key = f"parking_lot:{lot_id}"
-    spot_field = f"spot_{spot_id}"
+    # id_parking_spot is no longer used to check Redis state for an individual spot,
+    # but it might be kept for other logging or future use if individual spot management is re-introduced.
+    # For now, we check aggregate availability.
+    # spot_id = data.get("id_parking_spot") # TODO: Keep if client sends it and it's used elsewhere
 
-    #If the lot or the spot is not found
+    lot_key = f"parking_lot:{lot_id}"
     if not redis_client.exists(lot_key):
         return jsonify({"message": "Lot not found or not yet initialized"}), 404
-    
-    #Check the occupation
-    spot_status = redis_client.hget(lot_key, spot_field)
-    if spot_status is None:
-        return jsonify({"message": "Spot not found"}), 404
-    
-    if spot_status == "true":
-        return jsonify({"message": "Spot is currently occupied"}), 400
-    
-    #Now we know the spot is free, so from now on mark it as "true" which means it is occupied
-    #The spot will be marked as occupied (reserved) only if the TimescaleDB reservation has successfully been commited
-    #We will roll back the transaction if the Redis insert fails
+
+    # Check aggregate availability
+    lot_info = redis_client.hmget(lot_key, "car_num", "parking_spot_num")
+    car_num_str = lot_info[0]
+    parking_spot_num_str = lot_info[1]
+
+    if car_num_str is None or parking_spot_num_str is None:
+        return jsonify({"message": f"Lot {lot_id} data is incomplete in Redis."}), 500
+
+    try:
+        car_num = int(car_num_str)
+        parking_spot_num = int(parking_spot_num_str)
+    except ValueError:
+        return jsonify({"message": f"Invalid numeric data in Redis for lot {lot_id}."}), 500
+
+    if car_num >= parking_spot_num:
+        return jsonify({"message": "Parking lot is full"}), 400
+
+    # Proceed with TimescaleDB reservation
     try:
         timescale_cursor.execute(
             """
@@ -153,14 +163,19 @@ def reserve():
                 (parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp, checkout_price)
             VALUES (%s, %s, %s, NOW(), %s, %s)
             """
-        , (lot_id, None, data['id_user'], None, None))
+        # Assuming parking_spot_id in transaction can be null or a placeholder if not reserving a specific one
+        , (lot_id, None, data['id_user'], None, None)) #data.get("id_parking_spot") on index 1 if we decide to use analytics on it
         timescale_conn.commit()
     
     except Exception as e:
         timescale_conn.rollback()
         return jsonify({"message": f"Database error, reservation canceled: {str(e)}"}), 500
     
-    redis_client.hset(lot_key, spot_field, "true")
+    # Increment car_num in Redis and update timestamp - TODO: THIS IS DONE WITH CV model, reserving does not increment counter. POTENTIALLY IT CAN FORCE THE MODEL TO RECALC NUMBER OF CARS
+    # Use a pipeline for atomicity of Redis updates if preferred, though HINCRBY is atomic itself.
+    #new_car_num = redis_client.hincrby(lot_key, "car_num", 1)
+    #redis_client.hset(lot_key, "update_timestamp", datetime.utcnow().isoformat())
+    #print(f"Lot {lot_id} car_num incremented to {new_car_num} after reservation.")
 
     return jsonify({
         "message": "Reservation successful", 
@@ -174,12 +189,12 @@ def checkout():
       {
         "id_parking_lot": "<Mongo ObjectID as string>",
         "id_parking_spot": "<Mongo ObjectID as string>",
-        "id_user": "<User ID from Mongo>"
+        "id_user": "<User ID from Mongo>" // This is used to find the transaction
       }
     """
 
     data = request.get_json()
-
+    
     # 1) Validate input
     lot_id = data.get('id_parking_lot')
     spot_id = data.get('id_parking_spot')
@@ -187,13 +202,15 @@ def checkout():
     if not (lot_id and spot_id and user_id):
         return jsonify({"message": "Missing one of required fields: id_parking_lot, id_parking_spot, id_user"}), 400
 
+    lot_key = f"parking_lot:{lot_id}" # Define lot_key early
+
     # 2) Check the TimescaleDB table for an active reservation
     timescale_cursor.execute("""
         SELECT parking_lot_id, parking_spot_id, user_id, entry_timestamp, exit_timestamp
         FROM parking_transactions
         WHERE parking_lot_id = %s
           AND user_id = %s
-          AND exit_timestamp IS NULL
+          AND exit_timestamp IS NULL 
         LIMIT 1
     """, (lot_id, user_id))
     reservation = timescale_cursor.fetchone()
@@ -236,10 +253,12 @@ def checkout():
         timescale_conn.rollback()
         return jsonify({"message": f"Database error during checkout: {str(e)}"}), 500
 
-    # 6) Mark spot as free in Redis
-    lot_key = f"parking_lot:{lot_id}"
-    spot_field = f"spot_{spot_id}"
-    redis_client.hset(lot_key, spot_field, "false")
+    # 6) Decrement car_num in Redis and update timestamp
+    #new_car_num = redis_client.hincrby(lot_key, "car_num", -1) #TODO: SAME COMMENT AS FOR reserve()
+    # Ensure car_num doesn't go below zero due to potential race conditions or errors elsewhere
+    # Though HINCRBY itself won't make it negative unless it was already negative.
+    #redis_client.hset(lot_key, "update_timestamp", datetime.utcnow().isoformat())
+    #print(f"Lot {lot_id} car_num decremented to {new_car_num} after checkout.")
 
     # 7) Return success
     return jsonify({

@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  image-processor:
+    build: ./Image_Processing/Image_Processor
+    networks:
+      - cv-network
+    env_file:
+      - ./Image_Processing/.env    
+    depends_on:
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+
+  car-counter:
+    build: ./Image_Processing/Car_Counter
+    networks:
+      - app-network
+      - cv-network
+    hostname: car-counter
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./Image_Processing/.env  
+    depends_on:
+      - redis_parking_spots_status
+
+  image-fetcher:
+    build:
+      context: ./Image_Processing/Image_Fetcher
+    networks:
+      - cv-network
+      - app-network
+    env_file:
+      - ./Image_Processing/.env
+    depends_on:
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    restart: unless-stopped
+
+  image-editor:
+    build:
+      context: ./Image_Processing/Image_Editor
+    networks:
+      - cv-network
+    volumes:
+      - ./Image_Processing/Image_Editor/textures:/app/textures
+    env_file:
+      - ./Image_Processing/.env
+    depends_on:
+      minio:
+        condition: service_started
+    restart: unless-stopped
+
+

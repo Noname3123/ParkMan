@@ -1,0 +1,26 @@
+
+version: '3'
+
+networks: #TODO: remove this after merging with main docker-compose
+  cv-network:
+    name: "cv-network"
+    driver: bridge
+
+volumes:
+  minio_data:
+
+services:
+  minio:
+      image: minio/minio:latest
+      container_name: minio
+      networks:
+        - cv-network
+      env_file:
+          -  ./S3Storage/minio.env
+          -  ./S3Storage/minio.api-voditelj.shared.env
+      volumes:
+        - minio_data:/data
+      ports:
+        - "${MINIO_API_PORT:-9901}:9901"
+        - "${MINIO_CONSOLE_PORT:-9902}:9902"
+      command: server /data --address ":9901" --console-address ":9902"

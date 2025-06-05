@@ -1,0 +1,22 @@
+
+version: '3'
+
+networks:
+    cv-network:
+        external: true
+
+services:
+  kafka-topic-creator:
+    build:
+      context: . #Docker file is in same folder as Dockerfile
+    container_name: kafka-topic-creator
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092 # Connect to Kafka using its service name and internal port
+      TOPIC_NAME: cctv-image-events
+      NUM_PARTITIONS: 3
+      REPLICATION_FACTOR: 1
+    
+    networks:
+        - cv-network
+    
+    

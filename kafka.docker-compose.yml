@@ -1,0 +1,56 @@
+version: '3'
+
+networks:
+  #cv-network:
+    #name: "app-network"
+    #driver: bridge  #TODO: remove this line after merging with docker-compose.yml
+    #external: true
+
+volumes:
+  kafka-data:
+  kafka-secrets:
+  zookeeper-data:
+  zookeeper-log:
+  zookeeper-secrets:
+
+services:
+  # --- Infrastructure Services (largely unchanged) ---
+
+  
+  zookeeper:
+    image:  confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    stop_grace_period: 30s 
+    networks:
+      - cv-network
+    env_file:
+        - ./Kafka/zookeeper.env
+      
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
+      - zookeeper-secrets:/etc/zookeeper/secrets
+
+
+  
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    networks:
+      - cv-network
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    env_file:
+        - ./Kafka/kafka.env
+      
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+      - kafka-secrets:/etc/kafka/secrets
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:29092 --list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s # Give Kafka time to start up

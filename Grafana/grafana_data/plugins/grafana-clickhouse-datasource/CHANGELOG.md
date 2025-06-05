@@ -1,5 +1,54 @@
 # Changelog
 
+# 4.9.0
+
+### Features
+
+- Add support for the Grafana `row_limit` [configuration setting](https://grafana.com/docs/grafana/latest/setup-grafana/configure-grafana/#row_limit).
+- Add support for kind, status, instrumentation library, links, events and state data for traces (#1043, #1208)
+- Cancel JSON paths query after 10s (#1206)
+- SQL Editor now suggests database, table, column, and function names while typing (#1204)
+- Add SQL Formatter button + shortcut for making long queries more readable in the editor (#1205)
+
+### Fixes
+
+- Fixed "run query" shortcut from running stale query (#1205)
+- Dependency updates
+
+## 4.8.2
+
+### Fixes
+
+- Dependency updates
+
+## 4.8.1
+
+### Fixes
+
+- Dependency updates
+
+## 4.8.0
+
+### Features
+
+- Enable CtrlCmd + Enter keyboard shortcut to Run Query (#1158)
+
+### Fixes
+
+- Refactor `MutateResponse` function and PDC dialler creation (#1155)
+- Refactor `clickhouse.Connect` to improve context cancellation handling (#1154)
+- Prevent usage of failed connections and improve connection management (#1156). Please note that following this change, the following limits will be set. Although we believe these limits are reasonable, you can adjust them in the datasource settings if needed:
+  - `MaxOpenConns` to 50.
+  - `MaxIdleConns` to 25.
+  - `ConnMaxLifetime` to 5 minutes.
+- Dependency updates
+
+## 4.7.0
+
+### Features
+
+- Add JSON column sub-paths to column selection in query builder
+- Added events support in trace detail view.(https://github.com/grafana/clickhouse-datasource/pull/1128)
 
 ## 4.6.0
 
@@ -135,7 +184,7 @@
 - Fixed empty builder options when switching from SQL Editor back to Query Editor
 - Fix SQL Generator including "undefined" in `FROM` when database isn't defined
 - Allow adding spaces in multi filters (such as `WHERE .. IN`)
-- Fixed missing `AND` keyword when adding a filter to a Trace ID query 
+- Fixed missing `AND` keyword when adding a filter to a Trace ID query
 
 ## 4.0.2
 
@@ -185,10 +234,12 @@ Version 4.0.0 contains major revisions to the query builder and datasource confi
 - Added column hints, which offers better linking across query components when working with columns and filters. For example, a filter can be added for the `Time` column, even without knowing what the time column name is yet. This enables better SQL generation that is "aware" of a column's intended use.
 
 ### Plugin Backend
+
 - Added migration logic for `v3` configs going to `v4+`. This is applied when the config is loaded when building a database connection.
 - `$__timeFilter`, `$__fromTime`, and `$__toTime` macros now convert to `DateTime64(3)` for better server-side type conversion. Also enables millisecond precision time range filtering.
 
 #### Datasource Configuration
+
 - Added migration script for `v3.x` configurations to `v4+`. This runs automatically when opening/saving the datasource configuration.
 - Renamed config value `server` to `host`.
 - Renamed config value `timeout` to the more specific `dial_timeout`.

@@ -1,0 +1,18 @@
+version: '3.8'
+
+networks:
+      app-network:
+          external: true
+services:
+  clickhouse-init-parking-usage-admin:
+    image: clickhouse/clickhouse-client:latest # Consider pinning to a specific version
+    container_name: clickhouse-init-parking-usage-admin
+    volumes:
+      # Mount the SQL script to be executed (read-only)
+      - ./script_to_run/parking_usage_analytics.sql:/tmp/clickhouse-init-parking-usage.sql:ro
+      # Mount the helper script (read-only)
+      - ./script_to_run/execute-parking-usage-init.sh:/usr/local/bin/execute-parking-usage-init.sh:ro
+    entrypoint: /usr/local/bin/execute-parking-usage-init.sh
+    networks:
+      - app-network
+
