@@ -6,7 +6,8 @@ from bson import ObjectId
 from datetime import datetime # Added for timestamping
 from minio import Minio # Added for MinIO integration
 from minio.error import S3Error # Added for MinIO error handling
-from minio.lifecycleconfig import LifecycleConfig, Rule, Expiration, Filter # Added for MinIO lifecycle
+from minio.lifecycleconfig import LifecycleConfig, Rule, Expiration
+from minio.commonconfig import Filter # Added for MinIO lifecycle
 import redis
 
 api = Blueprint('api', __name__)
