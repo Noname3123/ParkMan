@@ -8,6 +8,7 @@ from typing import Optional, List, Tuple
 
 import boto3
 from kafka import KafkaProducer
+from kafka.errors import NoBrokersAvailable
 import redis
 
 
@@ -231,10 +232,16 @@ def main() -> None:
     r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=False)  # CHANGE
 
     # Kafka producer
-    producer = KafkaProducer(
-        bootstrap_servers=KAFKA_BROKER,
-        value_serializer=lambda v: json.dumps(v).encode("utf-8"),
-    )
+    producer = None
+    while producer is None:
+        try:
+            producer = KafkaProducer(
+                bootstrap_servers=KAFKA_BROKER,
+                value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+            )
+        except NoBrokersAvailable:
+            print(f"[ImageFetcher] Kafka broker not available at {KAFKA_BROKER}. Retrying in 5s...")
+            time.sleep(5)
 
     if not START_IMMEDIATELY:
         sleep_until_next_full_hour()
