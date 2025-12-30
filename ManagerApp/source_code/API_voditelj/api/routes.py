@@ -73,8 +73,8 @@ def add_owner():
         "surname": data['surname'],
         "parking_lots": [] #Empty list for storing newly added parking lots
     }
-    owners_collection.insert_one(owner)
-    return jsonify({"message": "Owner added"}), 201
+    result=owners_collection.insert_one(owner)
+    return jsonify({"message": "Owner added","id": str(result.inserted_id)}), 201
 
 @api.route('/owners/<string:owner_id>', methods = ['GET']) #Defining URL for getting existing owners
 def get_owner(owner_id):
@@ -104,7 +104,8 @@ def add_parking_lot():
         "geolocation": data['geolocation'],
         "parking_spaces": [], # Empty list for storing newly added parking spaces
         "camera_info": [],    # Initialize camera_info as an empty list
-        "minio_safe_data_storage": None # Initialize minio_safe_data_storage as None
+        "minio_safe_data_storage": None, # Initialize minio_safe_data_storage as None
+        "minio_camera_images_bucket": None # Initialize minio_camera_images_bucket as None
     }
     result = parking_lots_collection.insert_one(parking_lot)
     lot_id_obj = result.inserted_id
@@ -154,6 +155,20 @@ def add_parking_lot():
        minio_status_message = f"WARNING: An unexpected error occurred during MinIO setup for bucket '{bucket_name}': {str(e)}. 'minio_safe_data_storage' remains unlinked."
     # --- End MinIO Bucket Creation ---
 
+    # --- MinIO Bucket Creation for camera-images ---
+    camera_images_bucket = f"camera-images-parking-lot-{lot_id_str}"
+    try:
+        if not minio_client.bucket_exists(camera_images_bucket):
+            minio_client.make_bucket(camera_images_bucket)
+            minio_status_message += f" Bucket '{camera_images_bucket}' created."
+        
+        parking_lots_collection.update_one(
+            {"_id": lot_id_obj},
+            {"$set": {"minio_camera_images_bucket": camera_images_bucket}}
+        )
+    except Exception as e:
+        minio_status_message += f" Failed to setup '{camera_images_bucket}': {str(e)}."
+
     #Adding this parking lot to its owner
     if data.get('owner_id'):
         owners_collection.update_one(
@@ -176,6 +191,7 @@ def add_parking_lot():
 
     if minio_bucket_linked:
         response_details["minio_bucket_name"] = bucket_name
+    response_details["minio_camera_images_bucket"] = camera_images_bucket
     response_details["minio_status"] = minio_status_message
 
     return jsonify({"message": response_message, "details": response_details}), 201
