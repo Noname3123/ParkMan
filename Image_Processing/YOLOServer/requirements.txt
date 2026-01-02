@@ -2,4 +2,5 @@ fastapi
 uvicorn
 python-multipart
 ultralytics
-gdown
+mlflow
+boto3

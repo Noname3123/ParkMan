@@ -13,6 +13,13 @@ services:
     runtime: nvidia #use gpu
     environment:
        - NVIDIA_VISIBLE_DEVICES=all
+       - MLFLOW_TRACKING_URI=http://mlflow_server:5000
+       - MLFLOW_S3_ENDPOINT_URL=http://minio:9901
+       - MLFLOW_MODEL_NAME=ParkManYOLO
+       - MLFLOW_MODEL_TAG=Production
+    env_file:
+       - ./S3Storage/minio.env
+       - ./S3Storage/minio.api-voditelj.shared.env
 networks:
   cv-network:
     external: true

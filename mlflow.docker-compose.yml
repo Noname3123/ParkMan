@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  mlflow_server:
+    image: ghcr.io/mlflow/mlflow:v2.14.1
+    container_name: mlflow_server
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9901
+      - MLFLOW_S3_IGNORE_TLS=true
+    env_file:
+      - ./S3Storage/minio.env
+      - ./S3Storage/minio.api-voditelj.shared.env
+    command: mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root s3://mlflow/ --host 0.0.0.0
+    networks:
+      - cv-network
+    volumes:
+      - mlflow_data:/mlflow
+
+networks:
+  cv-network:
+    external: true
+
+volumes:
+  mlflow_data:
