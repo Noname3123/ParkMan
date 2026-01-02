@@ -20,7 +20,7 @@ s3 = boto3.client(
 )
 BUCKET = os.getenv("BUCKET_EDIT")
 
-YOLO_ENDPOINT = os.getenv("YOLO_ENDPOINT")
+YOLO_ENDPOINT = os.getenv("YOLO_ENDPOINT", "http://yolo_server:8000/predict")
 
 
 def yolo_remote_count(img_bytes: bytes) -> int:

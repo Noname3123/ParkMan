@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  yolo_server:
+    container_name: yolo_server
+    build:
+      context: ./Image_Processing/YOLO_Server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - cv-network
+    runtime: nvidia #use gpu
+    environment:
+       - NVIDIA_VISIBLE_DEVICES=all
+networks:
+  cv-network:
+    external: true
