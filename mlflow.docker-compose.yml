@@ -18,9 +18,7 @@ services:
     volumes:
       - mlflow_data:/mlflow
 
-networks:
-  cv-network:
-    external: true
+
 
 volumes:
   mlflow_data:

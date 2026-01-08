@@ -4,7 +4,7 @@ services:
   yolo_server:
     container_name: yolo_server
     build:
-      context: ./Image_Processing/YOLO_Server
+      context: ./Image_Processing/YOLOServer
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
@@ -20,6 +20,8 @@ services:
     env_file:
        - ./S3Storage/minio.env
        - ./S3Storage/minio.api-voditelj.shared.env
-networks:
-  cv-network:
-    external: true
+
+    depends_on:
+      car-counter:
+        condition: service_started
+
