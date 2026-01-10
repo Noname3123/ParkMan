@@ -96,6 +96,29 @@ else:
             
             model = YOLO('./yolo11m.pt')
 
+            # Define custom callback to log metrics during training
+            def on_fit_epoch_end(trainer):
+                # Log validation metrics (mAP, val losses)
+                if trainer.metrics:
+                    metrics = {k.replace('(', '_').replace(')', ''): v for k, v in trainer.metrics.items()}
+                    mlflow.log_metrics(metrics, step=trainer.epoch)
+                
+                # Log training losses
+                if hasattr(trainer, 'loss_names') and hasattr(trainer, 'tloss'):
+                    train_metrics = {f"train_{name}": val.item() for name, val in zip(trainer.loss_names, trainer.tloss)}
+                    mlflow.log_metrics(train_metrics, step=trainer.epoch)
+
+                # Log learning rates (pg0, pg1, pg2 usually correspond to weights, biases, etc.)
+                if hasattr(trainer, 'optimizer') and trainer.optimizer:
+                    for i, param_group in enumerate(trainer.optimizer.param_groups):
+                        mlflow.log_metric(f"lr/pg{i}", param_group['lr'], step=trainer.epoch)
+
+                # Log model fitness (weighted combination of mAP metrics used for 'best.pt')
+                if hasattr(trainer, 'fitness'):
+                    mlflow.log_metric("model_fitness", float(trainer.fitness), step=trainer.epoch)
+
+            model.add_callback("on_fit_epoch_end", on_fit_epoch_end)
+
             try:
                 # Train the model
                 # disable  ultralytics mlflow integration to avoid conflicts,
