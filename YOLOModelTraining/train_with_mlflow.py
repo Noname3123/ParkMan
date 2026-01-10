@@ -1,5 +1,5 @@
 import torch
-from ultralytics import YOLO
+from ultralytics import YOLO, settings
 import os
 from itertools import product
 import sys
@@ -14,6 +14,9 @@ import logging
 
 # 1. Set the Tracking URI to the exposed port of the MLflow server
 mlflow.set_tracking_uri("http://localhost:5000")
+
+#2. disable ultralytics mlflow integration to avoid conflicts
+settings.update({"mlflow": False})
 
 # Configure logging
 logging.basicConfig(
