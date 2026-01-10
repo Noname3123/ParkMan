@@ -6,6 +6,7 @@ import sys
 import mlflow
 import shutil
 import boto3
+import logging
 
 # -----------------------------------------------------------------------------
 # MLflow & MinIO Configuration
@@ -13,6 +14,17 @@ import boto3
 
 # 1. Set the Tracking URI to the exposed port of the MLflow server
 mlflow.set_tracking_uri("http://localhost:5000")
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("train.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # 2. Set S3/MinIO Environment Variables for Artifact Uploads
 # The client (this script) needs to know how to talk to MinIO to upload the model.
@@ -27,10 +39,10 @@ try:
     s3 = boto3.client('s3', endpoint_url=os.environ["MLFLOW_S3_ENDPOINT_URL"])
     bucket_name = "mlflow"
     if not any(b['Name'] == bucket_name for b in s3.list_buckets().get('Buckets', [])):
-        print(f"Creating S3 bucket: {bucket_name}")
+        logger.info(f"Creating S3 bucket: {bucket_name}")
         s3.create_bucket(Bucket=bucket_name)
 except Exception as e:
-    print(f"Warning: Attempt to check/create S3 bucket failed: {e}")
+    logger.warning(f"Warning: Attempt to check/create S3 bucket failed: {e}")
 
 # 3. Set the Experiment Name
 mlflow.set_experiment("YOLO_ParkMan_Training")
@@ -40,14 +52,9 @@ mlflow.set_experiment("YOLO_ParkMan_Training")
 # -----------------------------------------------------------------------------
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
+logger.info(f"Using device: {device}")
 
-data_yaml_path = './VisDrone/data.yaml'
-
-# Redirect stdout to log file (preserving original logic)
-old_stdout = sys.stdout
-log_file = open("train.log", "a")
-sys.stdout = log_file
+data_yaml_path = './VisDrone/data-visdrone.yaml'
 
 param_grid = {
     'epochs': [10],
@@ -59,9 +66,7 @@ param_grid = {
 # -----------------------------------------------------------------------------
 
 if not os.path.exists(data_yaml_path):
-    # Restore stdout to print error to console
-    sys.stdout = old_stdout
-    print(f"Error: {data_yaml_path} not found. Please make sure your dataset is correctly placed.")
+    logger.error(f"Error: {data_yaml_path} not found. Please make sure your dataset is correctly placed.")
 else:
     for epochs, imgsz in product(param_grid['epochs'], param_grid['imgsz']):
         
@@ -84,7 +89,7 @@ else:
             # 2. Log Dataset Configuration (Versioning)
             mlflow.log_artifact(data_yaml_path, artifact_path="dataset_config")
 
-            print(f'_____________________\nepoch: {epochs}, imgsz: {imgsz}, batch: 4____________________\n\n\n')
+            logger.info(f'_____________________\nepoch: {epochs}, imgsz: {imgsz}, batch: 4____________________\n\n\n')
             
             model = YOLO('./yolo11m.pt')
 
@@ -121,14 +126,11 @@ else:
                     if file_name.endswith('.png') or file_name.endswith('.jpg') or file_name.endswith('.csv'):
                         mlflow.log_artifact(os.path.join(save_dir, file_name), artifact_path="plots")
 
-                print(f"Training results saved to: {save_dir}")
+                logger.info(f"Training results saved to: {save_dir}")
 
             except Exception as e:
-                print(f"Error: {e}")
+                logger.error(f"Error: {e}")
                 mlflow.log_param("error", str(e))
-
-    sys.stdout = old_stdout
-    log_file.close()
 
 # -----------------------------------------------------------------------------
 # Post-Training (Optional: Save best of last run to Drive/Local)
