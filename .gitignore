@@ -2,3 +2,6 @@ Grafana
 PklotImages/images/
 YOLOModelTraining/*.zip
 VisDrone/
+YOLOModelTraining/runs/
+YOLOModelTraining/*.log
+YOLOModelTraining/*.pt
