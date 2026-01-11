@@ -16,7 +16,7 @@ services:
     env_file:
       - ./S3Storage/minio.env
       - ./S3Storage/minio.api-voditelj.shared.env
-    command: mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root s3://mlflow/ --host 0.0.0.0
+    command: mlflow server --backend-store-uri sqlite:////mlflow/mlflow.db --default-artifact-root s3://mlflow/ --host 0.0.0.0
     networks:
       - cv-network
     volumes:
