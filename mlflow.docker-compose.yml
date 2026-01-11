@@ -20,9 +20,4 @@ services:
     networks:
       - cv-network
     volumes:
-      - mlflow_data:/mlflow
-
-
-
-volumes:
-  mlflow_data:
+      - ./mlflow_data:/mlflow
