@@ -50,7 +50,17 @@ except Exception as e:
     logger.warning(f"Warning: Attempt to check/create S3 bucket failed: {e}")
 
 # 3. Set the Experiment Name
-mlflow.set_experiment("YOLO_ParkMan_Training")
+experiment_name = "YOLO_ParkMan_Training"
+try:
+    client = mlflow.MlflowClient()
+    experiment = client.get_experiment_by_name(experiment_name)
+    if experiment and experiment.lifecycle_stage == "deleted":
+        client.restore_experiment(experiment.experiment_id)
+        logger.info(f"Restored previously deleted experiment: {experiment_name}")
+except Exception as e:
+    logger.warning(f"Error checking experiment status: {e}")
+
+mlflow.set_experiment(experiment_name)
 
 # -----------------------------------------------------------------------------
 # Setup
