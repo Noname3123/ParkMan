@@ -8,6 +8,7 @@ import mlflow.pytorch
 import shutil
 import boto3
 import logging
+import pandas as pd
 
 # -----------------------------------------------------------------------------
 # MLflow & MinIO Configuration
@@ -92,6 +93,11 @@ else:
             
             # 2. Log Dataset Configuration (Versioning)
             mlflow.log_artifact(data_yaml_path, artifact_path="dataset_config")
+
+            # Log the dataset used for this run (populates the 'Datasets' tab in UI)
+            ds_info = pd.DataFrame([{"dataset_name": "VisDrone", "yaml_path": os.path.abspath(data_yaml_path)}])
+            dataset = mlflow.data.from_pandas(ds_info, name="VisDrone")
+            mlflow.log_input(dataset, context="training")
 
             logger.info(f'_____________________\nepoch: {epochs}, imgsz: {imgsz}, batch: 4____________________\n\n\n')
             
