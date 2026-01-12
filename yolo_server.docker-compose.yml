@@ -15,8 +15,11 @@ services:
        - NVIDIA_VISIBLE_DEVICES=all
        - MLFLOW_TRACKING_URI=http://mlflow_server:5000
        - MLFLOW_S3_ENDPOINT_URL=http://minio:9901
-       - MLFLOW_MODEL_NAME=ParkManYOLO
-       - MLFLOW_MODEL_TAG=Production
+       - MLFLOW_MODEL_NAME=YOLO_ParkMan_visdrone
+       - MLFLOW_MODEL_TAG=best_stability
+       - AWS_ACCESS_KEY_ID=minioadmin
+       - AWS_SECRET_ACCESS_KEY=minioadmin
+       - MLFLOW_S3_IGNORE_TLS=true
     env_file:
        - ./S3Storage/minio.env
        - ./S3Storage/minio.api-voditelj.shared.env
@@ -24,4 +27,3 @@ services:
     depends_on:
       car-counter:
         condition: service_started
-

@@ -3,16 +3,21 @@ import io
 from fastapi import FastAPI, UploadFile, File
 import uvicorn
 from ultralytics import YOLO
+import torch
 from PIL import Image
 import mlflow
 from mlflow.tracking import MlflowClient
+import mlflow.pytorch
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
 # Configuration
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow_server:5000")
-MODEL_NAME = os.getenv("MLFLOW_MODEL_NAME", "ParkManYOLO")
-MODEL_TAG = os.getenv("MLFLOW_MODEL_TAG", "Production")
+MODEL_NAME = os.getenv("MLFLOW_MODEL_NAME", "YOLO_ParkMan_visdrone")
+MODEL_TAG = os.getenv("MLFLOW_MODEL_TAG", "best_stability")
 
 def load_model():
     print(f"Connecting to MLflow at {MLFLOW_TRACKING_URI}...")
@@ -21,19 +26,8 @@ def load_model():
     print(f"Loading model '{MODEL_NAME}' with tag '{MODEL_TAG}'...")
     try:
         # Construct the model URI for the registry (e.g., models:/ParkManYOLO/Production)
-        model_uri = f"models:/{MODEL_NAME}/{MODEL_TAG}"
-        
-        # Download the artifact. This handles S3/MinIO interaction via boto3
-        local_path = mlflow.artifacts.download_artifacts(model_uri)
-        
-        # If the artifact is a directory, look for the .pt file inside
-        if os.path.isdir(local_path):
-            pt_files = [f for f in os.listdir(local_path) if f.endswith('.pt')]
-            if pt_files:
-                local_path = os.path.join(local_path, pt_files[0])
-        
-        print(f"Model artifact downloaded to {local_path}")
-        return YOLO(local_path)
+        model_uri = f"models:/{MODEL_NAME}@{MODEL_TAG}"
+        return mlflow.pytorch.load_model(model_uri)
     except Exception as e:
         print(f"Error loading model from MLflow: {e}")
         raise e
@@ -61,9 +55,10 @@ async def predict(file: UploadFile = File(...)):
         image_data = await file.read()
         image = Image.open(io.BytesIO(image_data))
         
-        results = model(image)
+        # Force inference on GPU if available (since model was saved on CPU)
+        results = model(image, device=0 if torch.cuda.is_available() else "cpu")
         # 'space-occupied' is the class name used in the notebook
-        car_count = get_target_class_count(results, 'space-occupied')
+        car_count = get_target_class_count(results, 'item')
         
         return {"car_count": car_count}
     except Exception as e:
