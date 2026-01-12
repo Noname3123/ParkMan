@@ -388,6 +388,39 @@ else:
                         model_uri = f"runs:/{run.info.run_id}/{artifact_path}"
                         reg_model = mlflow.register_model(model_uri, "YOLO_ParkMan_visdrone")
 
+                        # ============================================================
+                        # After training: compare and update "best_stability" pointer
+                        # ============================================================
+
+                        # CHANGE: dohvati score novog run-a
+                        # Pretpostavka: ti si već logirao BEST_METRIC_KEY u MLflow metrics.
+                        # Najsigurnije: čitaj iz trenutnog MLflow run-a.
+                        client = MlflowClient()
+                        current_run = mlflow.active_run()
+                        run_id = current_run.info.run_id
+
+                        run = client.get_run(run_id)
+                        new_score = run.data.metrics.get(BEST_METRIC_KEY)
+                        new_score = _safe_float(new_score)
+
+                        if new_score is None:
+                            print(f"[MLflow] WARNING: New run has no metric '{BEST_METRIC_KEY}'. Cannot compare/update best alias.")
+                        else:
+                            # reg_model je rezultat mlflow.register_model(...)
+                            # CHANGE: ovisno o tvojoj varijabli; često je to 'reg_model' ili 'model_version'
+                            new_version = reg_model.version  # CHANGE: adjust variable name if needed
+
+                            set_best_alias_if_improved(
+                                model_name=MLFLOW_MODEL_NAME,
+                                new_version=new_version,
+                                new_score=new_score,
+                                old_best_score=best_score_before,
+                                alias_name="best_stability",      # CHANGE: must match YOLO server's MLFLOW_MODEL_TAG
+                                metric_key=BEST_METRIC_KEY,
+                                tracking_uri=MLFLOW_TRACKING_URI,
+                            )
+
+
                         # Add description to the registered model version for easier identification in UI
                         client = mlflow.MlflowClient()
                         description = (
