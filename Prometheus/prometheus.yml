@@ -34,3 +34,7 @@ scrape_configs:
   - job_name: 'ETL processing'
     static_configs:
       - targets: ['etl_container:9395']
+
+  - job_name: 'ETL weekly parking distribution'
+    static_configs:
+      - targets: ['etl_weekly_parking_distribution:9396']

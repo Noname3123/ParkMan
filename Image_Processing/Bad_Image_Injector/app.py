@@ -64,29 +64,31 @@ def floor_to_hour(dt: datetime) -> datetime:
 # Key naming (S3 key)
 # =========================
 
-def build_object_key(prefix: str, ts: datetime, ext: str, cam_id: Optional[str] = None) -> str:
+def build_object_key(prefix: str, ts: datetime, ext: str, cam_id: Optional[str] = None, index: int = 0) -> str:
     """
-    Generira key koji izgleda kao "normalna" kamera slika.
-
-    Preporučeni standard (brzo listanje + lak prefix):
-      - folderi: YYYY/MM/DD/HH/
-      - filename: YYYYMMDD_HHMMSS_<camid>_<uuid>.jpg
-
-    CHANGE: Ako vaše stvarne slike imaju drugačiji format, promijeni ovdje.
+    Željeni format (bez foldera):
+      parking_spot_YYYY-MM-DD_HH-MM-SS.jpg
+    Ako count > 1, dodajemo sufiks _01, _02... da se ne prepisuju.
     """
-    # CHANGE: folder struktura (odlična za prefix listing po satu)
-    folder = f"{ts.year:04d}/{ts.month:02d}/{ts.day:02d}/{ts.hour:02d}/"  # CHANGE
+    # osiguraj UTC
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    else:
+        ts = ts.astimezone(timezone.utc)
 
-    # CHANGE: dio imena s cam_id
-    cam_part = f"{cam_id}_" if cam_id else ""  # CHANGE
+    base = f"parking_spot_{ts.year:04d}-{ts.month:02d}-{ts.day:02d}_{ts.hour:02d}-{ts.minute:02d}-{ts.second:02d}"
 
-    # CHANGE: filename format
-    fname = f"{ts.year:04d}{ts.month:02d}{ts.day:02d}_{ts.hour:02d}{ts.minute:02d}{ts.second:02d}_{cam_part}{uuid.uuid4().hex[:8]}{ext}"  # CHANGE
+    # da se ne prepisuje ako count > 1
+    if index > 0:
+        base = f"{base}_{index:02d}"
+
+    fname = f"{base}{ext}"
 
     if prefix and not prefix.endswith("/"):
         prefix += "/"
 
-    return f"{prefix}{folder}{fname}"
+    return f"{prefix}{fname}"
+
 
 
 # =========================
@@ -185,7 +187,7 @@ def inject_to_s3(
         else:
             raise ValueError(f"Unknown ts_mode: {ts_mode}")
 
-        key = build_object_key(prefix=prefix, ts=ts, ext=ext, cam_id=cam_id)
+        key = build_object_key(prefix=prefix, ts=ts, ext=ext, cam_id=cam_id, index=i)
 
         # CHANGE: metadata (korisno za debug / filtriranje)
         metadata = {

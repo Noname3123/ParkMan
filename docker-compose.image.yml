@@ -56,4 +56,26 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  bad-image-injector:
+    build: ./Image_Processing/Bad_Image_Injector
+    container_name: bad-image-injector
+    networks:
+      - cv-network
+      - app-network
+    env_file:
+      - ./Image_Processing/.env
+    volumes:
+      - ./Image_Processing/Bad_Image_Injector/bad_samples:/app/bad_samples:ro
+    working_dir: /app
+    entrypoint: ["python", "app.py"]
+    restart: "no"
+    profiles: ["tools"]
 
+
+networks:
+  app-network:
+    external: true
+    name: app-network
+  cv-network:
+    external: true
+    name: cv-network

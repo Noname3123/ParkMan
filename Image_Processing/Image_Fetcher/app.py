@@ -4,6 +4,7 @@ import json
 import time
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Tuple
+import logging
 
 import boto3
 from kafka import KafkaProducer
@@ -63,6 +64,13 @@ WRAP_AROUND_TO_START = os.getenv("WRAP_AROUND_TO_START", "true").lower() == "tru
 USE_UTC = True  # CHANGE
 
 # =========================
+# Fetching interval (seconds)
+# =========================
+# If 0, sleep 1 hour (default)
+# >0, sleep X seconds (testing)
+FETCH_INTERVAL_SECONDS = int(os.getenv("FETCH_INTERVAL_SECONDS", "0"))
+
+# =========================
 # Timestamp patterns
 # =========================
 TS_PATTERNS = [
@@ -97,13 +105,22 @@ def parse_ts_from_key(key: str) -> Optional[datetime]:
     return None
 
 def sleep_until_next_full_hour() -> None:
-    now = utc_now() if USE_UTC else datetime.now()
-    next_hour = (now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1))
-    seconds = (next_hour - now).total_seconds()
-    if seconds < 0:
-        seconds = 0
-    print(f"[ImageFetcher] Sleeping {int(seconds)}s until next full hour ({next_hour.isoformat()})")
-    time.sleep(seconds)
+    logger = logging.getLogger("ImageFetcher")
+
+    if FETCH_INTERVAL_SECONDS > 0:
+        logger.info(
+            f"[ImageFetcher] DEV MODE: sleeping {FETCH_INTERVAL_SECONDS}s before next fetch"
+        )
+        time.sleep(FETCH_INTERVAL_SECONDS)
+    else:
+        now = datetime.utcnow()
+        next_hour = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+        sleep_seconds = (next_hour - now).total_seconds()
+
+        logger.info(
+            f"[ImageFetcher] Sleeping {int(sleep_seconds)}s until next full hour ({next_hour.isoformat()}Z)"
+        )
+        time.sleep(sleep_seconds)
 
 def list_s3_objects(s3_client, bucket: str, prefix: str, max_keys: int) -> List[str]:
     keys: List[str] = []
