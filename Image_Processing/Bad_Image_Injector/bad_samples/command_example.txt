@@ -1,0 +1,8 @@
+# Add bad image with "now" timestamp
+docker compose --profile tools run --rm bad-image-injector \
+  python app.py --mode s3 --bad-image /app/bad_samples/empty_parking.jpg --count 1
+
+# Add bad image with custom (forced) timestamp
+docker compose --profile tools run --rm bad-image-injector \
+  python app.py --mode s3 --ts-mode custom --custom-ts 2026-01-17T20:10:00Z \
+  --bad-image /app/bad_samples/empty_parking.jpg
