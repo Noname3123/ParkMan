@@ -7,4 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 
-CMD ["python", "-u" ,"app.py", "--mode", "s3"]
+# CHANGE: ako želiš da container u sebi ima bad sample:
+# COPY ../bad_samples /app/bad_samples
+
+CMD ["python", "app.py", "--mode", "s3"]
