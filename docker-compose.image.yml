@@ -72,10 +72,10 @@ services:
     profiles: ["tools"]
 
 
-networks:
-  app-network:
-    external: true
-    name: app-network
-  cv-network:
-    external: true
-    name: cv-network
+# networks:
+#   app-network:
+#     external: true
+#     name: app-network
+#   cv-network:
+#     external: true
+#     name: cv-network
