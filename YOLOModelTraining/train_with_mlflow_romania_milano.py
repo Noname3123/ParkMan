@@ -2,7 +2,6 @@ import tempfile
 import torch
 from ultralytics import YOLO, settings
 import os
-from itertools import product
 import sys
 import mlflow
 import mlflow.pytorch
@@ -71,14 +70,48 @@ mlflow.set_experiment(experiment_name)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger.info(f"Using device: {device}")
 
-data_yaml_path = './VisDrone/data-visdrone.yaml'
+data_yaml_path = './VisDrone/data-romania.yaml'
 
-param_grid = {
-    'epochs': [10],
-    'imgsz': [640],
-}
+training_configs = [
+    # Config 1
+    {
+        'imgsz': 640, 'epochs': 50, 'batch': -1, 'lr0': 0.01, 'lrf': 0.01,
+        'optimizer': 'SGD', 'weight_decay': 0.0005, 'warmup_epochs': 3, 'cos_lr': False,
+        'hsv_h': 0.015, 'hsv_s': 0.7, 'hsv_v': 0.4, 'degrees': 0.0, 'translate': 0.1,
+        'scale': 0.5, 'shear': 0.0, 'fliplr': 0.5, 'flipud': 0.0, 'mosaic': 1.0,
+        'mixup': 0.0, 'copy_paste': 0.0, 'patience': 20
+    },
+    # Config 2
+    {
+        'imgsz': 640, 'epochs': 80, 'batch': -1, 'lr0': 0.008, 'lrf': 0.05,
+        'optimizer': 'SGD', 'weight_decay': 0.0007, 'warmup_epochs': 4, 'cos_lr': True,
+        'translate': 0.08, 'scale': 0.4, 'mosaic': 0.7, 'mixup': 0.0, 'copy_paste': 0.0,
+        'fliplr': 0.6, 'patience': 25
+    },
+    # Config 3
+    {
+        'imgsz': 768, 'epochs': 100, 'batch': -1, 'lr0': 0.0035, 'lrf': 0.1,
+        'optimizer': 'AdamW', 'weight_decay': 0.01, 'warmup_epochs': 5, 'cos_lr': True,
+        'hsv_h': 0.015, 'hsv_s': 0.6, 'hsv_v': 0.35, 'translate': 0.06, 'scale': 0.35,
+        'mosaic': 0.5, 'mixup': 0.05, 'copy_paste': 0.0, 'patience': 30
+    },
+    # Config 4
+    {
+        'imgsz': 768, 'epochs': 130, 'batch': -1, 'lr0': 0.0025, 'lrf': 0.12,
+        'optimizer': 'AdamW', 'weight_decay': 0.012, 'warmup_epochs': 6, 'cos_lr': True,
+        'hsv_s': 0.7, 'hsv_v': 0.45, 'translate': 0.07, 'scale': 0.4, 'mosaic': 0.35,
+        'mixup': 0.10, 'copy_paste': 0.1, 'close_mosaic': 15, 'patience': 35
+    },
+    # Config 5
+    {
+        'imgsz': 960, 'epochs': 160, 'batch': -1, 'lr0': 0.0020, 'lrf': 0.15,
+        'optimizer': 'AdamW', 'weight_decay': 0.015, 'warmup_epochs': 8, 'cos_lr': True,
+        'mosaic': 0.25, 'mixup': 0.05, 'copy_paste': 0.05, 'translate': 0.05,
+        'scale': 0.3, 'fliplr': 0.5, 'close_mosaic': 25, 'patience': 40
+    }
+]
 
-MODEL_TYPE = 'yolo11m'
+MODEL_TYPE = 'yolo11s'
 
 #.---------------------
 #helper functions
@@ -101,23 +134,22 @@ def clean_YOLO_model(model: YOLO) -> YOLO:
 if not os.path.exists(data_yaml_path):
     logger.error(f"Error: {data_yaml_path} not found. Please make sure your dataset is correctly placed.")
 else:
-    for epochs, imgsz in product(param_grid['epochs'], param_grid['imgsz']):
-        
+    for i, config in enumerate(training_configs):
+
         # Define a run name for MLflow
-        run_name = f"{MODEL_TYPE}_e{epochs}_img{imgsz}"
+        run_name = f"{MODEL_TYPE}_cfg{i+1}_e{config['epochs']}_img{config['imgsz']}"
         
         # Start an MLflow Run
         with mlflow.start_run(run_name=run_name) as run:
             
             # 1. Log Parameters
-            mlflow.log_params({
-                "epochs": epochs,
-                "imgsz": imgsz,
-                "batch_size": 4,
+            params_to_log = config.copy()
+            params_to_log.update({
                 "model_type": MODEL_TYPE,
                 "data_yaml": data_yaml_path,
                 "device": str(device)
             })
+            mlflow.log_params(params_to_log)
             
             # 2. Log Dataset Configuration (Versioning)
             mlflow.log_artifact(data_yaml_path, artifact_path="dataset_config")
@@ -127,7 +159,7 @@ else:
             dataset = mlflow.data.from_pandas(ds_info, name="VisDrone")
             mlflow.log_input(dataset, context="training")
 
-            logger.info(f'_____________________\nepoch: {epochs}, imgsz: {imgsz}, batch: 4____________________\n\n\n')
+            logger.info(f'_____________________\nRunning Config {i+1}: {config}\n____________________\n\n\n')
             
             model = YOLO(f'./{MODEL_TYPE}.pt')
 
@@ -159,14 +191,11 @@ else:
                 # disable  ultralytics mlflow integration to avoid conflicts,
                 
                 results = model.train(
-                    data=data_yaml_path, 
-                    epochs=epochs, 
-                    imgsz=imgsz, 
-                    batch=4, 
-                    patience=epochs//2, 
+                    data=data_yaml_path,
                     single_cls=True,
                     project="runs/train",
-                    name=run_name
+                    name=run_name,
+                    **config
                 )
 
                 # 3. Log Metrics
@@ -211,7 +240,7 @@ else:
                         client = mlflow.MlflowClient()
                         description = (
                             f"Run ID: {run.info.run_id}\n"
-                            f"Epochs: {epochs}, Imgsz: {imgsz}\n"
+                            f"Config: {config}\n"
                             f"mAP50: {metrics.get('metrics/mAP50_B', 'N/A')}"
                         )
                         client.update_model_version(
