@@ -83,18 +83,19 @@ def loop():
 
             # 2.5 Crop (samo za daljnju obradu + car-counter)
             work_img = img
+
             if CROP_ENABLED:
-                w, h = work_img.size
+                w, h = img.size
                 box = parse_crop_box(CROP_BOX_RAW, w, h)
                 if box:
-                    work_img = work_img.crop(box)
-                    print(f"[CROP] enabled box={box} orig={w}x{h} cropped={work_img.size[0]}x{work_img.size[1]}")
-                else:
-                    print(f"[CROP] enabled but invalid CROP_BOX='{CROP_BOX_RAW}' -> skipping")
+                    work_img = img.crop(box)
+                    print(f"[CROP] box={box} orig={w}x{h} cropped={work_img.size}")
+
 
             # 3. Obradi sliku (na cropped verziji)
             enhancer = ImageEnhance.Contrast(work_img.convert("RGB"))
             edited_img = enhancer.enhance(1.5)
+            edited_bytes = buf.getvalue()
 
             # 4. Spremanje obrađene slike
             buf = io.BytesIO()
@@ -103,7 +104,7 @@ def loop():
 
             edited_key = f"edited/{img_id}.jpg"
             S3.put_object(Bucket=BUCKET_EDIT, Key=edited_key,
-                          Body=buf, ContentType="image/jpeg")
+                          Body=edited_bytes, ContentType="image/jpeg")
             print(f"[EDITED] -> {BUCKET_EDIT}/{edited_key}")
 
             # 5. Slanje Car Counter-u
