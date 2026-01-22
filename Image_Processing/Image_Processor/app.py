@@ -95,12 +95,11 @@ def loop():
             # 3. Obradi sliku (na cropped verziji)
             enhancer = ImageEnhance.Contrast(work_img.convert("RGB"))
             edited_img = enhancer.enhance(1.5)
-            edited_bytes = buf.getvalue()
 
             # 4. Spremanje obrađene slike
             buf = io.BytesIO()
             edited_img.save(buf, format="JPEG")
-            buf.seek(0)
+            edited_bytes = buf.getvalue()
 
             edited_key = f"edited/{img_id}.jpg"
             S3.put_object(Bucket=BUCKET_EDIT, Key=edited_key,
