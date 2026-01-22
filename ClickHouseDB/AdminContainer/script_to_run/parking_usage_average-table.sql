@@ -12,3 +12,5 @@ CREATE TABLE parking_db.parking_usage_baseline (
     is_active UInt8 DEFAULT 1    -- Flag to indicate if this is the "current" baseline
 ) ENGINE = ReplacingMergeTree()
 ORDER BY (parking_lot_id, hour_of_day, calculation_date);
+
+GRANT ALTER, SELECT, INSERT ON parking_db.parking_usage_baseline TO parkman_user;

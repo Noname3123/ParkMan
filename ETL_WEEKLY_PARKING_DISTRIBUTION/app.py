@@ -118,11 +118,23 @@ RUN_ONCE = os.getenv("RUN_ONCE", "true").lower() == "true"  # CHANGE
 SCHEDULE_WEEKDAY = os.getenv("SCHEDULE_WEEKDAY", "monday").lower()  # CHANGE
 SCHEDULE_TIME = os.getenv("SCHEDULE_TIME", "00:05")  # CHANGE (HH:MM)
 
+# =========================
+# Simulation Config
+# =========================
+SIMULATION_MODE = os.getenv("SIMULATION_MODE", "false").lower() == "true"
+SIM_START_REAL = tm.time()
+# Anchor simulation start to now (or consistent with ETL script)
+SIM_START_DT = datetime.now(timezone.utc) if os.getenv("USE_UTC", "true").lower() == "true" else datetime.now()
 
 # ------------------------------------------------------------
 # Helpers: time
 # ------------------------------------------------------------
 def _now() -> datetime:
+    if SIMULATION_MODE:
+        # 1 real second = 1800 simulated seconds
+        elapsed = tm.time() - SIM_START_REAL
+        return SIM_START_DT + timedelta(seconds=elapsed * 1800)
+
     if USE_UTC:
         return datetime.now(timezone.utc)
     return datetime.now()
@@ -466,6 +478,13 @@ def schedule_weekly():
     """
     Schedulanje unutar containera. Alternativa je cron (ali ovdje slijedimo stil iz ETL_BATCH).
     """
+    if SIMULATION_MODE:
+        # 1 week = 168 hours. 1 sim hour = 2 real sec.
+        # 168 * 2 = 336 seconds.
+        schedule.every(336).seconds.do(run_weekly_job)
+        print(f"[WeeklyBatch] Scheduled job: every 336 seconds (SIMULATION MODE)")
+        return
+
     day_map = {
         "monday": schedule.every().monday,
         "tuesday": schedule.every().tuesday,

@@ -98,12 +98,27 @@ def import_data_into_click_house(data):
 
 
 
+# =========================
+# Simulation Helper
+# =========================
+SIMULATION_MODE = os.getenv("SIMULATION_MODE", "false").lower() == "true"
+SIM_START_REAL = tm.time()
+SIM_START_DT = datetime.now()
+
+def get_current_time():
+    if SIMULATION_MODE:
+        # 1 real second = 1800 simulated seconds (30 mins)
+        # 2 real seconds = 3600 simulated seconds (1 hour)
+        elapsed = tm.time() - SIM_START_REAL
+        return SIM_START_DT + timedelta(seconds=elapsed * 1800)
+    return datetime.now()
+
 def exec_etl():
 
     start=tm.time()
 
     ###DO ETL
-    input_time=datetime.now()
+    input_time=get_current_time()
 
     parking_lots_data, filtered_ids= get_data_from_redis()
     parking_lots,owner=get_filtered_data_from_mongo(filtered_ids)
@@ -170,16 +185,9 @@ if __name__ == "__main__":
 
 
     ## define schedule (every 1 mins)
-    schedule.every(1).minutes.do(exec_etl)
+    schedule.every(3).seconds.do(exec_etl)
 
     #exec job in schedule
     while True:
         schedule.run_pending()
         tm.sleep(1)
-
-
-
-
-
-
-

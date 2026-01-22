@@ -55,6 +55,7 @@ services:
       minio:
         condition: service_started
     restart: unless-stopped
+    profiles: ["tools-edit-images"]
 
   bad-image-injector:
     build: ./Image_Processing/Bad_Image_Injector
