@@ -24,7 +24,7 @@ S3_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", os.getenv("S3_SECRET_KEY", "minioa
 S3_REGION = os.getenv("S3_REGION", "us-east-1")  # CHANGE
 
 # CHANGE: camera images bucket
-S3_BUCKET_NAME = os.getenv("BUCKET_CAMERA", os.getenv("S3_BUCKET_NAME", "camera-images-parking-lot-696b80ef8e8e0ae48ed4e2f5"))  # TODO: Change to your camera-images
+S3_BUCKET_NAME = os.getenv("BUCKET_CAMERA", os.getenv("S3_BUCKET_NAME", "camera-images-parking-lot-6953dda6f0f2d22e951cabdb"))  # TODO: Change to your camera-images
 
 # CHANGE: optional prefix
 S3_PREFIX = os.getenv("S3_PREFIX", "")  # CHANGE
