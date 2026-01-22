@@ -31,8 +31,11 @@ def yolo_remote_count(img_bytes: bytes) -> int:
         resp.raise_for_status()
         data = resp.json()
         return int(data.get("car_count", 0))
-    except (requests.RequestException, ValueError):
+    except (requests.RequestException, ValueError) as e:
+       
+        print(f"[YOLO ERROR] {e}")
         return -1   # -1 = greška, možeš logati detaljnije
+
 
 
 @app.post("/process")
