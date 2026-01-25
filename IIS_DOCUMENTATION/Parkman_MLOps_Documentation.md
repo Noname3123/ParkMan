@@ -8,6 +8,68 @@
 
 **Verzija dokumentacije:** v1
 
+## Sadržaj
+
+- [1. Uvod](#1-uvod)
+  - [1.1 ParkMan sustav](#11-parkman-sustav)
+  - [1.2. Svrha dokumenta](#12-svrha-dokumenta)
+  - [1.3. Nadogradnja](#13-nadogradnja)
+  - [1.4. Povezana dokumentacija](#14-povezana-dokumentacija)
+- [2. Pregled MLOps arhitekture](#2-pregled-mlops-arhitekture)
+  - [2.1. High level arhitektura](#21-high-level-arhitektura)
+  - [2.2. Event & data flow](#22-event--data-flow)
+- [3. Image Fetcher - vremenski kontroliran ingestion](#3-image-fetcher---vremenski-kontroliran-ingestion)
+  - [3.1. Uloga Image Fetcher-a u MLOps pipeline-u](#31-uloga-image-fetcher-a-u-mlops-pipeline-u)
+  - [3.2. Odgovornosti i granice servisa](#32-odgovornosti-i-granice-servisa)
+  - [3.3. Konfiguracija (environment varijable)](#33-konfiguracija-environment-varijable)
+  - [3.4. Startup: resolve parking_lot_id iz MongoDB](#34-startup-resolve-parking_lot_id-iz-mongodb)
+  - [3.5. Parsiranje timestamp-a iz S3 key-a](#35-parsiranje-timestamp-a-iz-s3-key-a)
+  - [3.6. Redis state: last_ts i last_key](#36-redis-state-last_ts-i-last_key)
+  - [3.7. Odabir sljedeće slike](#37-odabir-sljedeće-slike)
+  - [3.8. Kafka poruka](#38-kafka-poruka)
+  - [3.9. Scheduler](#39-scheduler)
+- [4. Image Processor - prostorna normalizacija input-a](#4-image-processor---prostorna-normalizacija-input-a)
+  - [4.1. Uloga Image Processor u MLOps pipeline-u](#41-uloga-image-processor-u-mlops-pipeline-u)
+  - [4.2. Problem koji Image Processor rješava](#42-problem-koji-image-processor-rješava)
+  - [4.3. Strategija izdvajanja ROI-ja](#43-strategija-izdvajanja-roi-ja)
+  - [4.4. Dohvat slike iz MinIO-a](#44-dohvat-slike-iz-minio-a)
+  - [4.5. Izračun ROI-ja i rezanje slike](#45-izračun-roi-ja-i-rezanje-slike)
+  - [4.6. Pohrana originalne i procesirane slike](#46-pohrana-originalne-i-procesirane-slike)
+  - [4.7. Prosljeđivanje slike YOLO inferenciji](#47-prosljeđivanje-slike-yolo-inferenciji)
+  - [4.8. Konfiguracija Image Processor-a](#48-konfiguracija-image-processor-a)
+- [5. YOLO Inference servis (lokalni server)](#5-yolo-inference-servis-lokalni-server)
+  - [5.1. Razlozi za lokalni YOLO server](#51-razlozi-za-lokalni-yolo-server)
+  - [5.2. API YOLO servera](#52-api-yolo-servera)
+  - [5.3. Integracija s Car Counter servisom](#53-integracija-s-car-counter-servisom)
+- [6. MLflow integracija](#6-mlflow-integracija)
+  - [6.1. Uloga MLflow-a u sustavu](#61-uloga-mlflow-a-u-sustavu)
+  - [6.2. Dohvat produkcijskog modela](#62-dohvat-produkcijskog-modela)
+  - [6.3. Odvajanje treniranja od inferencije](#63-odvajanje-treniranja-od-inferencije)
+- [7. YOLO model](#7-yolo-model)
+- [8. Batch processing i ClickHouseDB](#8-batch-processing-i-clickhousedb)
+  - [8.1. Razlozi za batch obradu](#81-razlozi-za-batch-obradu)
+  - [8.2. Nova ClickHouse baza](#82-nova-clickhouse-baza)
+  - [8.3. Tjedna average distribucija](#83-tjedna-average-distribucija)
+- [9. Dataset management i kontrolirani fault injection](#9-dataset-management-i-kontrolirani-fault-injection)
+  - [9.1. Kreiranje novog dataset-a](#91-kreiranje-novog-dataset-a)
+  - [9.2. Motivacija za uvođenje Bad Image Injector-a](#92-motivacija-za-uvođenje-bad-image-injector-a)
+  - [9.3. Uloga Bad Image Injector-a u arhitekturi](#93-uloga-bad-image-injector-a-u-arhitekturi)
+  - [9.4. Način rada](#94-način-rada)
+  - [9.5. Odabir ciljanog timestamp-a](#95-odabir-ciljanog-timestamp-a)
+  - [9.6. Implementacija: injekcija slike u MinIO](#96-implementacija-injekcija-slike-u-minio)
+  - [9.7. Tipovi simuliranih anomalija](#97-tipovi-simuliranih-anomalija)
+  - [9.8. Uloga Bad Image Injector-a u batch analizi](#98-uloga-bad-image-injector-a-u-batch-analizi)
+- [10. State management i konzistentnost](#10-state-management-i-konzistentnost)
+  - [10.1. Motivacija za uvođenje state management-a](#101-motivacija-za-uvođenje-state-management-a)
+  - [10.2. Redis kao centralni state store](#102-redis-kao-centralni-state-store)
+  - [10.3. Ključevi stanja u sustavu](#103-ključevi-stanja-u-sustavu)
+  - [10.4. Korištenje state-a u Image Fetcher-u](#104-korištenje-state-a-u-image-fetcher-u)
+  - [10.5. Konzistentnost kroz ponovna pokretanja i padove servisa](#105-konzistentnost-kroz-ponovna-pokretanja-i-padove-servisa)
+  - [10.6. Interakcija state-a s Bad Image Injector-om](#106-interakcija-state-a-s-bad-image-injector-om)
+- [11. Ogranočenja i poznati trade-off-ovi](#11-ogranočenja-i-poznati-trade-off-ovi)
+- [12. Mogući budući razvoj](#12-mogući-budući-razvoj)
+- [13. Zaključak](#13-zaključak)
+
 ## 1. Uvod
 
 ### 1.1 ParkMan sustav
@@ -36,7 +98,7 @@ U ovoj nadogradnji sustava ParkMan, cilj je bio proširiti postojeće funkcional
 - sustava za verzioniranje modela (MLFlow), što olakšava postupak praćenja eksperimenata i postavljanje modela računalnog vida.
 - praćenja prosječne distribucije korištenosti parkinga kroz vrijeme, kako bi se osiguralo pravovremeno upozoravanje vlasnika na nedosljednosti u zauzetosti parkinga.
 
-### 1.2. Povezana dokukentacija
+### 1.4. Povezana dokumentacija
 Na sljedećoj poveznici je detaljnija dokumentacija projekta ParkMan:
     - [Onedrive](https://uniri-my.sharepoint.com/:b:/g/personal/benjamin_jakupovic_uniri_hr1/IQBxKCiG_vY7TqhrMb42BgwBATg140KsFKUupPaZixg55SY?e=DsJmTs)
 
@@ -511,7 +573,20 @@ Naposlijetku je za produkciju izabran YOLO11 small model koji je pretreniran nad
 
 Metrike tog modela su prikazane ispod:
 
-
+| Metrika | Vrijednost |
+| :--- | :--- |
+| Precision (Box) | 0.9497 |
+| Recall (Box) | 0.9590 |
+| mAP@50 (Box) | 0.9806 |
+| mAP@50-95 (Box) | 0.7924 |
+| Validation Box Loss | 0.7818 |
+| Validation Class Loss | 0.3926 |
+| Validation DFL Loss | 0.9714 |
+| Train Box Loss | 0.6195 |
+| Train Class Loss | 0.3600 |
+| Train DFL Loss | 0.9044 |
+| Learning Rate | 0.0003 |
+| Model Fitness | 0.7894 |
 
 
 
