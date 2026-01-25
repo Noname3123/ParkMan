@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Parkman_MLOps_Documentation.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="parkman---mlops-pipeline-phase-5">ParkMan - MLOps Pipeline (Phase 5)</h1>
+<p><strong>Autori:</strong> Benjamin Jakupović i Damjan Đekić</p>
+<p><strong>Kontekst:</strong> Projekt iz kolegija <em>Inteligentni informacijski sutavi</em></p>
+<p><strong>Ak. god.:</strong> 2025./2026.</p>
+<p><strong>Verzija dokumentacije:</strong> v1</p>
+<h2 id="sadr%C5%BEaj">Sadržaj</h2>
+<ul>
+<li><a href="#1-uvod">1. Uvod</a>
+<ul>
+<li><a href="#11-parkman-sustav">1.1 ParkMan sustav</a></li>
+<li><a href="#12-svrha-dokumenta">1.2. Svrha dokumenta</a></li>
+<li><a href="#13-nadogradnja">1.3. Nadogradnja</a></li>
+<li><a href="#14-povezana-dokumentacija">1.4. Povezana dokumentacija</a></li>
+</ul>
+</li>
+<li><a href="#2-pregled-mlops-arhitekture">2. Pregled MLOps arhitekture</a>
+<ul>
+<li><a href="#21-high-level-arhitektura">2.1. High level arhitektura</a></li>
+<li><a href="#22-event--data-flow">2.2. Event &amp; data flow</a></li>
+</ul>
+</li>
+<li><a href="#3-image-fetcher---vremenski-kontroliran-ingestion">3. Image Fetcher - vremenski kontroliran ingestion</a>
+<ul>
+<li><a href="#31-uloga-image-fetcher-a-u-mlops-pipeline-u">3.1. Uloga Image Fetcher-a u MLOps pipeline-u</a></li>
+<li><a href="#32-odgovornosti-i-granice-servisa">3.2. Odgovornosti i granice servisa</a></li>
+<li><a href="#33-konfiguracija-environment-varijable">3.3. Konfiguracija (environment varijable)</a></li>
+<li><a href="#34-startup-resolve-parking_lot_id-iz-mongodb">3.4. Startup: resolve parking_lot_id iz MongoDB</a></li>
+<li><a href="#35-parsiranje-timestamp-a-iz-s3-key-a">3.5. Parsiranje timestamp-a iz S3 key-a</a></li>
+<li><a href="#36-redis-state-last_ts-i-last_key">3.6. Redis state: last_ts i last_key</a></li>
+<li><a href="#37-odabir-sljede%C4%87e-slike">3.7. Odabir sljedeće slike</a></li>
+<li><a href="#38-kafka-poruka">3.8. Kafka poruka</a></li>
+<li><a href="#39-scheduler">3.9. Scheduler</a></li>
+</ul>
+</li>
+<li><a href="#4-image-processor---prostorna-normalizacija-input-a">4. Image Processor - prostorna normalizacija input-a</a>
+<ul>
+<li><a href="#41-uloga-image-processor-u-mlops-pipeline-u">4.1. Uloga Image Processor u MLOps pipeline-u</a></li>
+<li><a href="#42-problem-koji-image-processor-rje%C5%A1ava">4.2. Problem koji Image Processor rješava</a></li>
+<li><a href="#43-strategija-izdvajanja-roi-ja">4.3. Strategija izdvajanja ROI-ja</a></li>
+<li><a href="#44-dohvat-slike-iz-minio-a">4.4. Dohvat slike iz MinIO-a</a></li>
+<li><a href="#45-izra%C4%8Dun-roi-ja-i-rezanje-slike">4.5. Izračun ROI-ja i rezanje slike</a></li>
+<li><a href="#46-pohrana-originalne-i-procesirane-slike">4.6. Pohrana originalne i procesirane slike</a></li>
+<li><a href="#47-proslje%C4%91ivanje-slike-yolo-inferenciji">4.7. Prosljeđivanje slike YOLO inferenciji</a></li>
+<li><a href="#48-konfiguracija-image-processor-a">4.8. Konfiguracija Image Processor-a</a></li>
+</ul>
+</li>
+<li><a href="#5-yolo-inference-servis-lokalni-server">5. YOLO Inference servis (lokalni server)</a>
+<ul>
+<li><a href="#51-razlozi-za-lokalni-yolo-server">5.1. Razlozi za lokalni YOLO server</a></li>
+<li><a href="#52-api-yolo-servera">5.2. API YOLO servera</a></li>
+<li><a href="#53-integracija-s-car-counter-servisom">5.3. Integracija s Car Counter servisom</a></li>
+</ul>
+</li>
+<li><a href="#6-mlflow-integracija">6. MLflow integracija</a>
+<ul>
+<li><a href="#61-uloga-mlflow-a-u-sustavu">6.1. Uloga MLflow-a u sustavu</a></li>
+<li><a href="#62-dohvat-produkcijskog-modela">6.2. Dohvat produkcijskog modela</a></li>
+<li><a href="#63-odvajanje-treniranja-od-inferencije">6.3. Odvajanje treniranja od inferencije</a></li>
+</ul>
+</li>
+<li><a href="#7-yolo-model">7. YOLO model</a></li>
+<li><a href="#8-batch-processing-i-clickhousedb">8. Batch processing i ClickHouseDB</a>
+<ul>
+<li><a href="#81-razlozi-za-batch-obradu">8.1. Razlozi za batch obradu</a></li>
+<li><a href="#82-nova-clickhouse-baza">8.2. Nova ClickHouse baza</a></li>
+<li><a href="#83-tjedna-average-distribucija">8.3. Tjedna average distribucija</a></li>
+</ul>
+</li>
+<li><a href="#9-dataset-management-i-kontrolirani-fault-injection">9. Dataset management i kontrolirani fault injection</a>
+<ul>
+<li><a href="#91-kreiranje-novog-dataset-a">9.1. Kreiranje novog dataset-a</a></li>
+<li><a href="#92-motivacija-za-uvo%C4%91enje-bad-image-injector-a">9.2. Motivacija za uvođenje Bad Image Injector-a</a></li>
+<li><a href="#93-uloga-bad-image-injector-a-u-arhitekturi">9.3. Uloga Bad Image Injector-a u arhitekturi</a></li>
+<li><a href="#94-na%C4%8Din-rada">9.4. Način rada</a></li>
+<li><a href="#95-odabir-ciljanog-timestamp-a">9.5. Odabir ciljanog timestamp-a</a></li>
+<li><a href="#96-implementacija-injekcija-slike-u-minio">9.6. Implementacija: injekcija slike u MinIO</a></li>
+<li><a href="#97-tipovi-simuliranih-anomalija">9.7. Tipovi simuliranih anomalija</a></li>
+<li><a href="#98-uloga-bad-image-injector-a-u-batch-analizi">9.8. Uloga Bad Image Injector-a u batch analizi</a></li>
+</ul>
+</li>
+<li><a href="#10-state-management-i-konzistentnost">10. State management i konzistentnost</a>
+<ul>
+<li><a href="#101-motivacija-za-uvo%C4%91enje-state-management-a">10.1. Motivacija za uvođenje state management-a</a></li>
+<li><a href="#102-redis-kao-centralni-state-store">10.2. Redis kao centralni state store</a></li>
+<li><a href="#103-klju%C4%8Devi-stanja-u-sustavu">10.3. Ključevi stanja u sustavu</a></li>
+<li><a href="#104-kori%C5%A1tenje-state-a-u-image-fetcher-u">10.4. Korištenje state-a u Image Fetcher-u</a></li>
+<li><a href="#105-konzistentnost-kroz-ponovna-pokretanja-i-padove-servisa">10.5. Konzistentnost kroz ponovna pokretanja i padove servisa</a></li>
+<li><a href="#106-interakcija-state-a-s-bad-image-injector-om">10.6. Interakcija state-a s Bad Image Injector-om</a></li>
+</ul>
+</li>
+<li><a href="#11-ograno%C4%8Denja-i-poznati-trade-off-ovi">11. Ogranočenja i poznati trade-off-ovi</a></li>
+<li><a href="#12-mogu%C4%87i-budu%C4%87i-razvoj">12. Mogući budući razvoj</a></li>
+<li><a href="#13-zaklju%C4%8Dak">13. Zaključak</a></li>
+</ul>
+<h2 id="1-uvod">1. Uvod</h2>
+<h3 id="11-parkman-sustav">1.1 ParkMan sustav</h3>
+<p>ParkMan je aplikacija koja se sastoji od tri dijela: web aplikacije za
+upravitelje parkiranja, mobilne aplikacije za korisnike i API-ja za senzore.</p>
+<p>Cilj je bio
+stvoriti aplikaciju koja će:</p>
+<ul>
+<li>Omogućiti upraviteljima parkiranja kreiranje novih parkirnih mjesta unutar
+pripadajućih parkirališta</li>
+<li>Omogućiti korisnicima kreiranje računa, traženje slobodnih parkirnih mjesta, kao i
+rezervaciju i plaćanje korištenih mjesta</li>
+<li>Koristiti računalni vid za određivanje količine slobodnih mjesta temeljem
+zauzetosti parkingih mjesta</li>
+</ul>
+<h3 id="12-svrha-dokumenta">1.2. Svrha dokumenta</h3>
+<p>U ovom dokumentu se prikazuje tehnička dokumentacija nadogradnje sustava Parkman.</p>
+<h3 id="13-nadogradnja">1.3. Nadogradnja</h3>
+<p>U ovoj nadogradnji sustava ParkMan, cilj je bio proširiti postojeće funkcionalnosti sustava dodavanjem:</p>
+<ul>
+<li>sustava za verzioniranje modela (MLFlow), što olakšava postupak praćenja eksperimenata i postavljanje modela računalnog vida.</li>
+<li>praćenja prosječne distribucije korištenosti parkinga kroz vrijeme, kako bi se osiguralo pravovremeno upozoravanje vlasnika na nedosljednosti u zauzetosti parkinga.</li>
+</ul>
+<h3 id="14-povezana-dokumentacija">1.4. Povezana dokumentacija</h3>
+<p>Na sljedećoj poveznici je detaljnija dokumentacija projekta ParkMan:
+- <a href="https://uniri-my.sharepoint.com/:b:/g/personal/benjamin_jakupovic_uniri_hr1/IQBxKCiG_vY7TqhrMb42BgwBATg140KsFKUupPaZixg55SY?e=DsJmTs">Onedrive</a></p>
+<h2 id="2-pregled-mlops-arhitekture">2. Pregled MLOps arhitekture</h2>
+<p>Ovo poglavlje opisuje MLOps arhitekturu uvedenu u fazi 5 projekta ParkMan, s fokusom na infrastrukturu, tok podataka i integraciju strojnog učenja u produkcijski pipeline. Arhitektura je dizajnirana kao event-driven mikroservisni sustav, u kojem se pomoću message brokera prosljeđuju podaci (slike) modelu (serviranom i verzioniranom pomoću mlflow-a), koji izvršava inferenciju te se sa batch procesima osigurava spremanje rezultata inferencije za daljnju analitiku.</p>
+<h3 id="21-high-level-arhitektura">2.1. High level arhitektura</h3>
+<p><img src="IIS_diagram.drawio.png" alt="IIS_diagram"></p>
+<p>Na visokoj razini, MLOps arhitektura sastoji se od sljedećih glavnih komponenti:</p>
+<ol>
+<li>
+<p><strong>Image Fetcher</strong></p>
+<ul>
+<li>Servis zadužen za vremenski kontroliran dohvat slika iz dataseta (jedna slika po satu u stvarnom svijetu, odnosno jedna slika na dvije sekunde prilikom testiranja), uz osiguravanje konzistentnog redoslijeda obrade (sekventno po vremenu). Ovaj servis simulira kameru na parkingu koja svakih sat vremena prosljeđuje sliku modelu kako bi za taj parking se odredio broj parkiranih vozila</li>
+</ul>
+</li>
+<li>
+<p><strong>Image Processor</strong></p>
+<ul>
+<li>Provodi prostornu normalizaciju ulaznih slika (izrezivanje parking zone) kako bi se YOLO modelu isporučivao samo relevantan dio slike. Model tu (obrađenu) sliku sprema u <strong>S3 bucket</strong> s dodatnim transformacijama (kreirajući potencijalni, obrađeni dataset za dotreniravanje modela, uz napomenu da transformacije nisu implementirane) i istovremeno prosljeđuje <strong>Car counter-u</strong> sliku za detekciju. Također sprema neobrađenu kopiju slike u sigurni <strong>S3 bucket</strong> za taj parking, kojem jedino vlasnik tog parkinga ima pristup. Taj bucket ima retention policy od 30 dana.</li>
+</ul>
+</li>
+<li>
+<p><strong>YOLO Inference Server (Car Counter)</strong></p>
+<ul>
+<li>Lokalni servis za inferenciju koji prima obrađene slike iz <strong>image processor-a</strong> i vraća broj detektiranih vozila. Servis učitava model sa MLflow registry-a (model koji je označen kao <strong>production</strong>).</li>
+<li>Ovaj mikroservis je podijeljen na dva dijela:
+<ul>
+<li><strong>Car Counter</strong>, servis koji prima slike obrađene slike koje <strong>image processor</strong> proslijedi, poziva api <strong>YOLO Server-a</strong> za inferenciju i dobiva broj vozila za parking. Taj broj vozila se zapisuje u <strong>Redis</strong> bazu, mijenjajući prethodni zapis za taj parking u <strong>Redisu</strong>.</li>
+<li><strong>YOLO server</strong> mikroservis koji učitava odgovarajući model s MlFLow-a (označen kao <strong>production</strong>) te izlaže endpoint za inferenciju modela pomoću FastAPI aplikacije.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>MLflow Server</strong></p>
+<ul>
+<li>Služi kao registar modela i izvor istine za verzije modela korištene u inferenciji. U MLFlow-u su se zapisivali rezultati treniranja modela (metrike tijekom treniranja, parametri modela, konfiguracijske datoteke korištenog skupa podataka, artefakti stvoreni tijekom treniranja modela te konačne težine modela). Trenirani modeli su se registrirali u mlflowu te su se dodale odgovarajue oznake (npr. oznaka <strong>production</strong>), kako bi se mogao definirati model koji će drugi mikroservisi preuzeti.</li>
+</ul>
+</li>
+<li>
+<p><strong>MinIO (S3 Storage)</strong></p>
+<ul>
+<li>Služi kao pohrana za slike s parking kamera te uključuje pohranu &quot;raw&quot; slika (za simulaciju rada parking kamere), pohranu obrađenih slika (npr. Area of interest extraction) koje se prosljeđuju modelu, pohranu obrađenih slika za dotreniravanje modela te pohranu neobrađenih slika parkinga za sigurnosne potrebe.</li>
+</ul>
+</li>
+<li>
+<p><strong>Redis</strong></p>
+<ul>
+<li>Baza podataka za svaki parking sprema trenutno stanje auta na parkingu te timestamp ažuriranja tog unosa, kako bi se mogao pratiti redoslijed slika koje će <strong>Image fetcher</strong> proslijediti modelu iz pohrane za simulaciju rada parking kamere.</li>
+</ul>
+</li>
+<li>
+<p><strong>ClickHouseDB</strong></p>
+<ul>
+<li>Baza podataka koja se koristi za potrebe analitike korištenosti parkinga. (prosjeci distribucija zauzetosti parkinga po danima u tjednu i detekcija odstupanja te praćenje korištenosti parkinga kroz vrijeme)</li>
+</ul>
+</li>
+<li>
+<p><strong>Prometheus</strong></p>
+<ul>
+<li>Servis za praćenje rada sustava (baze, etl servisi) te spremanje varijable koja se koristi za ažuriranje alarma za nedosljednost u distribuciji korištenja parkinga.</li>
+</ul>
+</li>
+<li>
+<p><strong>Grafana</strong></p>
+<ul>
+<li>Servis koji vlasniku parkinga omogućuje praćenje metrika parkinga (korištenost parkinga kroz vrijeme, prosječna distribucija korištenosti te praćenje alarma o nedosljednosti).</li>
+</ul>
+</li>
+<li>
+<p><strong>ETL servisi</strong></p>
+<ul>
+<li>Batch servisi koji su ključni za analitiku:
+<ul>
+<li><strong>Parking usage</strong> servis, koji svakih sat vremena (neposredno nakon što model ažurira unos u Redisu), preuzima trenutno stanje za parkinge u Redisu te ih sprema u <strong>ClickhouseDB</strong> radi praćenja povijesti korištenosti tog parkinga</li>
+<li><strong>Weekly parking distribution</strong> servis, koji svakih tjedan dana preuzima povijest parkinga iz <strong>ClickhouseDB</strong>, izračunava prosječnu zauzetost parkinga po satu (tijekom svih 7 dana) te sprema novu tjednu distribuciju u <strong>ClickhouseDB</strong>. Ovaj servis također uspoređuje prethodnu prosječnu zauzetost parkinga te temeljem uspredbe distribucija (preko apsolutne razlike, relativne razlike i Z-testa) definira postoji li odstupanje između nove i prethodne distribucije. U slučaju da postoji, postavlja se alarm u <strong>Prometheusu</strong> te se promjena prikazuje u <strong>Grafani</strong>.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Kafka</strong>:</p>
+<ul>
+<li>Message broker koji se koristi za stremaning slika između <strong>S3 storage-a</strong> i <strong>image processor-a</strong></li>
+</ul>
+</li>
+</ol>
+<p>Komponente su orkestrirane putem Docker infrastrukture, dok se komunikacija između servisa temelji na jasnoj podjeli odgovornosti i minimalnoj međuzavisnosti.</p>
+<h3 id="22-event--data-flow">2.2. Event &amp; data flow</h3>
+<p>MLOps pipeline u fazi 5 slijedi deterministički i ponovljiv tok podataka, prikazan u nastavku:</p>
+<ol>
+<li><strong>Vremenski dohvat slike</strong>
+<ul>
+<li>Image Fetcher simulira kameru koja uzima sliku parkinga, tako da dohvaća sliku iz MinIO Storage-a na temelju timestamp-a (jedna slika po satu), pri čemu koristi Redis kako bi osigurao da se slike ne obrađuju više puta.</li>
+</ul>
+</li>
+<li><strong>Pohrana i prosljeđivanje</strong>
+<ul>
+<li>Dohvaćena slike ostaje pohranjena u MinIO-u, a metapodaci o slici (ključ, timestamp, parking ID) prosljeđuju se sljedećem servisu (Kafka).</li>
+</ul>
+</li>
+<li><strong>Prostorna normalizacija</strong>
+<ul>
+<li>Image Processor prima metapodatke iz Kafke, preuzima sliku iz S3 storage-a, izdvaja relevantni dio slike (ROI) koji sadrži parkiralište te:
+<ul>
+<li>sprema sigurnosnu kopiju originalne slike</li>
+<li>sprema &quot;obrađenu&quot; kopiju slike za potrebe dotreniranja modela</li>
+<li>generira procesiranu verziju slike za inferenciju</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>YOLO inferencija</strong>
+<ul>
+<li>Procesirana slika šalje se lokalnom YOLO serveru, koji koristi model dohvaćen iz MLflow registry-a za detekciju i prebrojavanje vozila</li>
+</ul>
+</li>
+<li><strong>Spremanje rezultata</strong>
+<ul>
+<li>Rezultati inferencije (broj vozila po slici) zapisuju se u:
+<ul>
+<li>Redis (trenutno stanje)</li>
+<li>ClickHouseDB (za kasniju analizu) pomoću batch servisa</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Batch obrada (periodički)</strong>
+<ul>
+<li>Na tjednoj bazi izračunavaju se agregirane distribucije zauzeća parkirališta, koje se uspoređuju s prethodnim periodima radi detekcija anomalija</li>
+</ul>
+</li>
+</ol>
+<h2 id="3-image-fetcher---vremenski-kontroliran-ingestion">3. Image Fetcher - vremenski kontroliran ingestion</h2>
+<h3 id="31-uloga-image-fetcher-a-u-mlops-pipeline-u">3.1. Uloga Image Fetcher-a u MLOps pipeline-u</h3>
+<p>Image Fetcher je servis koji periodički (svaki puni sat) dohvaća sljedeću sliku iz MinIO/S3 bucket-a na temelju timestamp-a iz naziva ključa (S3 key). Odabranu slikku ne preuzima lokalno, već šalje metapodatke (key + parking_lot_id) kroz Kafka topic prema sljedećoj komponenti pipeline-a (Image Processor). Osnovna ideja servisa je da, umjesto nasumičnog uzimanja slike kao prije, osigurava deterministički i reproducibilni redoslijed obrade.</p>
+<h3 id="32-odgovornosti-i-granice-servisa">3.2. Odgovornosti i granice servisa</h3>
+<p>Image Fetcher izvodi sljedeće radnje:</p>
+<ul>
+<li>Resolve-a <code>parking_lot_id</code> iz MongoDB-a (prema imenu parkinga)</li>
+<li>Lista objekte u MinIO bucket-u</li>
+<li>Parsira timestamp iz naziva ključa (regex uz više različitih formata)</li>
+<li>Bira sljedeći ključ (<code>ts &gt; last_ts</code>)</li>
+<li>Šalje Kafka poruku: <code>{image_key, parking_lot_id}</code></li>
+<li>Sprema stanje u Redis (<code>last_ts</code>, <code>last_key</code>)</li>
+<li>Spava do sljedećeg punog sata</li>
+</ul>
+<h3 id="33-konfiguracija-environment-varijable">3.3. Konfiguracija (environment varijable)</h3>
+<p>Najvažnije varijable okruženja za Image Fetcher su:
+<strong>MinIO/S3</strong></p>
+<ul>
+<li><code>MINIO_ENDPOINT</code> (npr. <code>http://minio:9901</code>)</li>
+<li><code>MINIO_ACCESS_KEY</code>, <code>MINIO_SECRET_KEY</code> (pristup MinIO)</li>
+<li><code>BUCKET_CAMERA</code> (bucket s dataset slikama)</li>
+</ul>
+<p><strong>Kafka</strong></p>
+<ul>
+<li><code>KAFKA_BOOTSTRAP</code> (Kafka URL)</li>
+<li><code>TOPIC</code> (tema na koju se pretplaćuje)</li>
+</ul>
+<p><strong>Redis</strong></p>
+<ul>
+<li><code>REDIS_HOST</code> (Redis URL)</li>
+<li><code>REDIS_PORT</code></li>
+</ul>
+<p><strong>MongoDB (parking_lot_id resolve)</strong></p>
+<ul>
+<li><code>MONGO_MANAGER_DATABASE_R_ONLY_URI</code> (čitanje podataka o parkingu)</li>
+<li><code>PARKING_LOT_NAME</code> (ime parkinga koje se dohvaća)</li>
+<li><code>MONGO_LOTS_COLLECTION</code> (skup parkinga)</li>
+</ul>
+<p><strong>Scheduler</strong></p>
+<ul>
+<li><code>FETCH_INTERVAL_SECONDS</code>
+<ul>
+<li><code>0</code> = spavanje do sljedećeg punog sata</li>
+<li><code>&gt;0</code> = spavanje x broj sekundi</li>
+</ul>
+</li>
+</ul>
+<h3 id="34-startup-resolve-parkinglotid-iz-mongodb">3.4. Startup: resolve parking_lot_id iz MongoDB</h3>
+<p>Na startu servis resolve-a parking_lot_id na temelju imena parkinga. Dizajnirano je na način da radi samo sa jednim parkingom</p>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">resolve_parking_lot_id</span><span class="hljs-params">()</span> -&gt; str:</span>
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> MONGO_URI:
+        <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">"Missing MONGO_MANAGER_DATABASE_R_ONLY_URI"</span>)
+
+    client = MongoClient(MONGO_URI)
+    <span class="hljs-keyword">try</span>:
+        db = client.get_default_database()
+        col = db[MONGO_LOTS_COLLECTION]
+
+        <span class="hljs-keyword">if</span> PARKING_LOT_NAME_REGEX:
+            q = {<span class="hljs-string">"name"</span>: {<span class="hljs-string">"$regex"</span>: PARKING_LOT_NAME, <span class="hljs-string">"$options"</span>: <span class="hljs-string">"i"</span>}}
+        <span class="hljs-keyword">else</span>:
+            q = {<span class="hljs-string">"name"</span>: PARKING_LOT_NAME}
+
+        doc = col.find_one(q, {<span class="hljs-string">"_id"</span>: <span class="hljs-number">1</span>, <span class="hljs-string">"name"</span>: <span class="hljs-number">1</span>})
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> doc:
+            <span class="hljs-keyword">raise</span> RuntimeError(<span class="hljs-string">f"Parking lot not found. Query=<span class="hljs-subst">{q}</span>"</span>)
+
+        <span class="hljs-keyword">return</span> str(doc[<span class="hljs-string">"_id"</span>])
+    <span class="hljs-keyword">finally</span>:
+        client.close()
+</div></code></pre>
+<h3 id="35-parsiranje-timestamp-a-iz-s3-key-a">3.5. Parsiranje timestamp-a iz S3 key-a</h3>
+<p>Fetcher pretpostavlja da timestamp postoji u nazivu objekta (ključu). Podržano je više formata preko regex uzorka, npr.:</p>
+<ul>
+<li><code>YYYY-MM-DD HH:MM:SS</code></li>
+<li><code>YYYYMMDDHHMMSS</code></li>
+<li><code>YYYY/MM/DD/HH/MM/SS</code></li>
+</ul>
+<p>Parsiranje vraća <code>datetime</code> u UTC formatu:</p>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">parse_ts_from_key</span><span class="hljs-params">(key: str)</span> -&gt; Optional[datetime]:</span>
+    <span class="hljs-keyword">for</span> pattern <span class="hljs-keyword">in</span> TS_PATTERNS:
+        m = pattern.search(key)
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> m:
+            <span class="hljs-keyword">continue</span>
+        <span class="hljs-keyword">return</span> datetime(y, mo, d, h, mi, s, tzinfo=timezone.utc)
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">None</span>
+</div></code></pre>
+<p>Ako key nema parsabilan timestamp, taj objekt se ignorira i ne ulazi u izbor.</p>
+<h3 id="36-redis-state-lastts-i-lastkey">3.6. Redis state: last_ts i last_key</h3>
+<p>Da bi se izbjegla ponovna obrada istih slika, state se drži u Redis-u kroz dva ključa:</p>
+<ul>
+<li><code>image_fetcher:last_ts</code></li>
+<li><code>image_fetcher:last_key</code></li>
+</ul>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">get_last_state</span><span class="hljs-params">(r: redis.Redis)</span> -&gt; Tuple[Optional[datetime], Optional[str]]:</span>
+    last_ts_raw = r.get(REDIS_KEY_LAST_TS)
+    last_key_raw = r.get(REDIS_KEY_LAST_KEY)
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">set_last_state</span><span class="hljs-params">(r: redis.Redis, ts: datetime, key: str)</span> -&gt; <span class="hljs-keyword">None</span>:</span>
+    r.set(REDIS_KEY_LAST_TS, ts.isoformat())
+    r.set(REDIS_KEY_LAST_KEY, key)
+</div></code></pre>
+<p>Deterministički izbor sljedeće slike omogućava <code>last_ts</code>, dok se <code>last_key</code> koristi za debugging i praćenje zadnje poslanih slika.</p>
+<h3 id="37-odabir-sljede%C4%87e-slike">3.7. Odabir sljedeće slike</h3>
+<p>Fetcher lista objekte u bucketu (maksimalno do veličine definirane sa <code>S3_MAX_KEYS_SCAN</code>, default 5000), parsira timestamp, sortira i bira:</p>
+<ul>
+<li>ako <code>last_ts</code> ne postoji uzima se najranija slika</li>
+<li>inače traži prvi <code>ts &gt; last_ts</code></li>
+<li>ako nema novijih i varijable <code>WRAP_AROUND_TO_START=true</code>, vraća se natrag na početak</li>
+</ul>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">pick_next_key_by_timestamp</span><span class="hljs-params">(keys: List[str], last_ts: Optional[datetime])</span> -&gt; Optional[Tuple[str, datetime]]:</span>
+    parsed = [(ts, k) <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> keys <span class="hljs-keyword">if</span> (ts := parse_ts_from_key(k)) <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>]
+    parsed.sort(key=<span class="hljs-keyword">lambda</span> x: x[<span class="hljs-number">0</span>])
+
+    <span class="hljs-keyword">if</span> last_ts <span class="hljs-keyword">is</span> <span class="hljs-literal">None</span>:
+        ts, k = parsed[<span class="hljs-number">0</span>]
+        <span class="hljs-keyword">return</span> (k, ts)
+
+    <span class="hljs-keyword">for</span> ts, k <span class="hljs-keyword">in</span> parsed:
+        <span class="hljs-keyword">if</span> ts &gt; last_ts:
+            <span class="hljs-keyword">return</span> (k, ts)
+
+    <span class="hljs-keyword">if</span> WRAP_AROUND_TO_START:
+        ts, k = parsed[<span class="hljs-number">0</span>]
+        <span class="hljs-keyword">return</span> (k, ts)
+
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">None</span>
+</div></code></pre>
+<h3 id="38-kafka-poruka">3.8. Kafka poruka</h3>
+<p>Kada se odabere slika, šalje se poruka na Kafka topic. Payload je minimalan:</p>
+<pre class="hljs"><code><div>payload = {
+    <span class="hljs-string">"image_key"</span>: next_key,
+    <span class="hljs-string">"parking_lot_id"</span>: parking_lot_id,
+}
+producer.send(KAFKA_TOPIC, value=payload)
+producer.flush()
+</div></code></pre>
+<h3 id="39-scheduler">3.9. Scheduler</h3>
+<p>Fetcher ima dva režima.</p>
+<p><strong>Produkcijski režim (default)</strong></p>
+<ul>
+<li>Spava do sljedećeg punog sata</li>
+</ul>
+<pre class="hljs"><code><div>now = datetime.utcnow()
+next_hour = (now + timedelta(hours=<span class="hljs-number">1</span>)).replace(minute=<span class="hljs-number">0</span>, second=<span class="hljs-number">0</span>, microsecond=<span class="hljs-number">0</span>)
+time.sleep((next_hour - now).total_seconds())
+</div></code></pre>
+<p><strong>Test režim</strong></p>
+<ul>
+<li>Ako je ``FETCH_INTERVAL_SECONDS &gt; 0, koristi se fiksni sleep u sekundama</li>
+</ul>
+<pre class="hljs"><code><div><span class="hljs-keyword">if</span> FETCH_INTERVAL_SECONDS &gt; <span class="hljs-number">0</span>:
+    time.sleep(FETCH_INTERVAL_SECONDS)
+</div></code></pre>
+<h2 id="4-image-processor---prostorna-normalizacija-input-a">4. Image Processor - prostorna normalizacija input-a</h2>
+<p>Image Processor je servis koji se nalazi između Image Fetcher-a i YOLO inferencijskog servisa. Njegova primarna uloga je prostorna normalizacija slika, odnosno izdvajanje samo onog dijela slike koji zaista sadrži parkiralište (ROI - <em>Region of interest</em>).</p>
+<p>Time se smanjuje šum u ulaznim podacima, povećava konzistentnost inferencije i pojednostavljuje rad YOLO modela.</p>
+<h3 id="41-uloga-image-processor-u-mlops-pipeline-u">4.1. Uloga Image Processor u MLOps pipeline-u</h3>
+<p>Image Processor predstavlja klasičan preprocessing korak u MLOps arhitekturi.</p>
+<ul>
+<li>Dohvaća originalnu sliku in MinIO-a (prema <code>image_key</code>)</li>
+<li>Izdvaja statički definirani ROI (parkiralište)</li>
+<li>Sprema:
+<ul>
+<li>originalnu sliku u security bucket</li>
+<li>procesiranu (izrezanu) sliku u output bucket</li>
+</ul>
+</li>
+<li>Prosljeđuje procesiranu sliku YOLO inferencijskom servisu</li>
+</ul>
+<h3 id="42-problem-koji-image-processor-rje%C5%A1ava">4.2. Problem koji Image Processor rješava</h3>
+<p>Dataset korišten u ovoj fazi projekta ima sljedeća svojstva:</p>
+<ul>
+<li>Kamera je statična</li>
+<li>Parkiralište se uvijek nalazi na donjem desnom dijelu slike</li>
+<li>Ostatak slike sadrži:
+<ul>
+<li>zgrade</li>
+<li>cestu</li>
+<li>nebo</li>
+<li>šum koji nije relevantan za detekciju vozila na parkiralištu</li>
+</ul>
+</li>
+</ul>
+<p>Ako bi se cijela slika slala u YOLO model:</p>
+<ul>
+<li>povećava se broj lažnih detekcija</li>
+<li>model uči irelevantne obrasce</li>
+<li>inferencija je sporija i nestabilnija</li>
+</ul>
+<p>Zbog toga je uveden Image Processor koji garantira da YOLO uvijek dobiva prostorno konzistentan input.</p>
+<h3 id="43-strategija-izdvajanja-roi-ja">4.3. Strategija izdvajanja ROI-ja</h3>
+<p>U ovoj fazi koristi se statički ROI, definiran u odnosu na dimenzije slike.</p>
+<p>ROI je:</p>
+<ul>
+<li>Pozicioniran u donjem desnom kutu slike</li>
+<li>Definiran kao postotak širine i visine slike</li>
+<li>Ne ovisi o detekciji (nema dinamičkog ROI-ja)</li>
+</ul>
+<p>Razlozi zašto je korišten statički ROI:</p>
+<ul>
+<li>Kamera je fiksna</li>
+<li>Dataset je konzistentan</li>
+<li>Implementacija je jednostavna i deterministička</li>
+</ul>
+<h3 id="44-dohvat-slike-iz-minio-a">4.4. Dohvat slike iz MinIO-a</h3>
+<p>Image Processor prima poruku koja sadrži <code>image_key</code>. Na temelju toga dohvaća originalnu sliku iz MinIO bucket-a.</p>
+<pre class="hljs"><code><div>obj = s3.get_object(Bucket=BUCKET_CAMERA, Key=image_key)
+image_bytes = obj[&quot;Body&quot;].read()
+image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
+</div></code></pre>
+<p>Ako slika ne postoji ili se ne može dekodirati:</p>
+<ul>
+<li>Proces se prekida</li>
+<li>Greška se zapisuje</li>
+<li>Slika se ne šalje dalje u pipeline</li>
+</ul>
+<h3 id="45-izra%C4%8Dun-roi-ja-i-rezanje-slike">4.5. Izračun ROI-ja i rezanje slike</h3>
+<p>ROI se računa dinamički iz dimenzija slike, ali s fiksnim omjerima:</p>
+<pre class="hljs"><code><div>h, w, _ = image.shape
+
+x_start = int(w * <span class="hljs-number">0.55</span>)
+y_start = int(h * <span class="hljs-number">0.55</span>)
+
+roi = image[y_start:h, x_start:w]
+</div></code></pre>
+<p>Ovim pristupom:</p>
+<ul>
+<li>Gornji lijevi dio slike se odbacuje</li>
+<li>Zadržava se donji desni kvadrant slike</li>
+<li>Crop radi ispravno za različite rezolucije</li>
+</ul>
+<h3 id="46-pohrana-originalne-i-procesirane-slike">4.6. Pohrana originalne i procesirane slike</h3>
+<p>Nakon obrade, Image Processor sprema dvije verzije slike</p>
+<h4 id="1-originalna-slika-sigurnosna-kopija">1. Originalna slika (sigurnosna kopija)</h4>
+<ul>
+<li>Služi za:
+<ul>
+<li>sigurnosne potrebe (ako se na primjer snime ključni dokađaji na parkingu vlasnika)</li>
+</ul>
+</li>
+<li>Sprema se u poseban bucket</li>
+</ul>
+<pre class="hljs"><code><div>s3.put_object(
+    Bucket=SECURITY_BUCKET,
+    Key=image_key,
+    Body=image_bytes,
+    ContentType=<span class="hljs-string">"image/jpeg"</span>
+)
+</div></code></pre>
+<h4 id="2-procesirana-slika-roi">2. Procesirana slika (ROI)</h4>
+<ul>
+<li>Koristi se isključivo za inferenciju</li>
+<li>Manja je</li>
+<li>Sadrži samo relevantne informacije</li>
+</ul>
+<pre class="hljs"><code><div>_, encoded = cv2.imencode(<span class="hljs-string">".jpg"</span>, roi)
+s3.put_object(
+    Bucket=PROCESSED_BUCKET,
+    Key=image_key,
+    Body=encoded.tobytes(),
+    ContentType=<span class="hljs-string">"image/jpeg"</span>
+)
+</div></code></pre>
+<h3 id="47-proslje%C4%91ivanje-slike-yolo-inferenciji">4.7. Prosljeđivanje slike YOLO inferenciji</h3>
+<p>Nakon uspješne obrade, Image Processor šalje procesiranu sliku YOLO serveru.</p>
+<p>Ovim se Image Processor logički odvaja od inferencije, što je važno MLOps načelo.</p>
+<h3 id="48-konfiguracija-image-processor-a">4.8. Konfiguracija Image Processor-a</h3>
+<p>Najvažnije varijable okoline:</p>
+<ul>
+<li><code>BUCKET_CAMERA</code> (MinIO bucket sa slikama kamere)</li>
+<li><code>BUCKET_SECURITY</code> (Security storage originalnih slika)</li>
+<li><code>BUCKET_PROCESSED</code> (Pohrana procesiranih slika)</li>
+<li><code>ROI_X_START_RATIO</code> (Postotak slike koji se reže vodoravno)</li>
+<li><code>ROI_Y_START_RATIO</code> (Postotak slike koji se reže okomito)</li>
+</ul>
+<p>Omjeri ROI-ja mogu se prilagoditi bez promjene koda.</p>
+<h2 id="5-yolo-inference-servis-lokalni-server">5. YOLO Inference servis (lokalni server)</h2>
+<h3 id="51-razlozi-za-lokalni-yolo-server">5.1. Razlozi za lokalni YOLO server</h3>
+<p>Odluka da se YOLO inferencija implementira kao zaseban mikroservis (YOLO Server), umjesto da se ugradi izravno u Car Counter servis, donesena je iz nekoliko arhitektonskih razloga:</p>
+<ul>
+<li><strong>Izolacija ovisnosti</strong> - YOLO modeli i biblioteke za duboko učenje (PyTorch, Ultralytics) su &quot;teške&quot; i imaju specifične sistemske zahtjeve (npr. CUDA drivere). Odvajanjem u zaseban servis, Car Counter ostaje lagan i fokusiran na poslovnu logiku, dok se okruženje za inferenciju može optimizirati zasebno.</li>
+<li><strong>Verzioniranje:</strong> YOLO server je dizajniran da dinamički preuzima model s MLflow-a. To omogućuje promjenu modela (npr. ažuriranje na noviju verziju ili promjena arhitekture) promjenom konfiguracije u MLflow registry-ju, bez potrebe za ponovnim kompajliranjem ili redeployanjem Car Counter servisa.</li>
+</ul>
+<h3 id="52-api-yolo-servera">5.2. API YOLO servera</h3>
+<p>YOLO Server je implementiran koristeći <strong>FastAPI</strong> okvir te izlaže jednostavan REST API za komunikaciju.</p>
+<p><strong>Endpoint:</strong> <code>POST /predict</code></p>
+<p>Ovaj endpoint prihvaća sliku, provodi inferenciju koristeći učitani model i vraća broj detektiranih objekata ciljane klase.</p>
+<p><strong>Ulazni podaci:</strong></p>
+<ul>
+<li><code>file</code>: Slika u binarnom formatu (multipart/form-data).</li>
+</ul>
+<p><strong>Izlazni podaci (JSON):</strong></p>
+<pre class="hljs"><code><div>{
+    <span class="hljs-attr">"car_count"</span>: <span class="hljs-number">15</span>
+}
+</div></code></pre>
+<p><strong>Logika inferencije:</strong>
+Prilikom pokretanja, servis se spaja na <strong>MLflow Tracking Server</strong> i preuzima artefakte modela definiranog varijablama okoline (<code>MLFLOW_MODEL_NAME</code> i <code>MLFLOW_MODEL_TAG</code>).</p>
+<pre class="hljs"><code><div><span class="hljs-comment"># Učitavanje modela s MLflow-a</span>
+model_uri = <span class="hljs-string">f"models:/<span class="hljs-subst">{MODEL_NAME}</span>@<span class="hljs-subst">{MODEL_TAG}</span>"</span>
+model = mlflow.pytorch.load_model(model_uri)
+</div></code></pre>
+<p>Tijekom inferencije, rezultati se filtriraju kako bi se prebrojala samo vozila (klasa koja odgovara detektiranim automobilima u korištenom datasetu).</p>
+<h3 id="53-integracija-s-car-counter-servisom">5.3. Integracija s Car Counter servisom</h3>
+<p>Car Counter servis djeluje kao klijent YOLO servera. Komunikacija se odvija sinkrono putem HTTP protokola.</p>
+<p>Proces rada:</p>
+<ol>
+<li><strong>Priprema:</strong> Car Counter prima notifikaciju i dohvaća sliku iz S3 bucketa.</li>
+<li><strong>Slanje zahtjeva:</strong> Poziva se funkcija <code>yolo_remote_count</code> koja šalje sliku na adresu definiranu u <code>YOLO_ENDPOINT</code> varijabli (default: <code>http://yolo_server:8000/predict</code>).</li>
+<li><strong>Obrada odgovora:</strong> Servis čeka JSON odgovor s brojem vozila. U slučaju mrežne greške ili timeout-a, vraća se vrijednost <code>-1</code>, što signalizira grešku u detekciji.</li>
+</ol>
+<p>Ovakav dizajn omogućuje labavu povezanost između logike brojanja i same implementacije detekcije.</p>
+<h2 id="6-mlflow-integracija">6. MLflow integracija</h2>
+<h3 id="61-uloga-mlflow-a-u-sustavu">6.1. Uloga MLflow-a u sustavu</h3>
+<p>MLflow je korišten kao centralna platforma za upravljanje cjelokupnim životnim ciklusom modela strojnog učenja u ParkMan sustavu. Njegova uloga je trostruka:</p>
+<ol>
+<li>
+<p>Služi kao centralizirani repozitorij za praćenje eksperimenata. Tijekom faze treniranja, skripta <code>train_with_mlflow.py</code> automatski bilježi sve relevantne informacije za svako pokretanje:</p>
+<ul>
+<li><strong>Parametre:</strong> Hiperparametri kao što su broj epoha (<code>epochs</code>), veličina slike (<code>imgsz</code>), i tip modela (<code>MODEL_TYPE</code>).</li>
+<li><strong>Metrike:</strong> Pokazatelji performansi modela poput mAP-a (mean Average Precision) i vrijednosti funkcije gubitka (loss), koji se bilježe na kraju svake epohe.</li>
+<li><strong>Artefakte:</strong> Bilo koje datoteke generirane tijekom treniranja, uključujući težine modela (<code>best.pt</code>), vizualizacije (npr. <code>confusion_matrix.png</code>) i konfiguracijske datoteke (<code>data-visdrone.yaml</code>).</li>
+</ul>
+</li>
+<li>
+<p>Koristi se kao registar modela, odnosno centralno mjesto za verzioniranje i upravljanje modelima koji su spremni za produkciju. Svaki model registriran pod određenim imenom (npr. <code>YOLO_ParkMan_visdrone</code>) može imati više verzija. Verzije se kasnije označuju tagovima (npr. <code>production</code>), što omogućuje jasno razdvajanje modela u razvoju, testiranju i produkciji.</p>
+</li>
+<li>
+<p>Koristi se <code>mlflow.pytorch</code> modul za spremanje modela u formatu koji je lako učitati u drugim servisima. Kao pozadinska pohrana za sve artefakte (uključujući i same modele) koristi se <strong>MinIO S3 storage</strong>, što osigurava trajnost i skalabilnost.</p>
+</li>
+</ol>
+<h3 id="62-dohvat-produkcijskog-modela">6.2. Dohvat produkcijskog modela</h3>
+<p>Jedna od glavnih prednosti MLflow integracije je dinamičko dohvaćanje modela u <strong>YOLO Inference servisu</strong>. Servis nije statički povezan s određenom datotekom modela, već dohvaća verziju označenu za produkcijsku upotrebu izravno iz MLflow Model Registry-ja.</p>
+<p>Proces je sljedeći:</p>
+<ol>
+<li>Prilikom pokretanja, YOLO server čita varijable okoline <code>MLFLOW_MODEL_NAME</code> i <code>MLFLOW_MODEL_TAG</code>.</li>
+<li>Na temelju tih varijabli konstruira se jedinstveni URI za dohvat modela.</li>
+<li>Pozivom <code>mlflow.pytorch.load_model</code> preuzimaju se artefakti modela s MinIO-a i učitava se model u memoriju.</li>
+</ol>
+<pre class="hljs"><code><div><span class="hljs-comment"># YOLOServer/main.py</span>
+
+<span class="hljs-comment"># Configuration</span>
+MLFLOW_TRACKING_URI = os.getenv(<span class="hljs-string">"MLFLOW_TRACKING_URI"</span>, <span class="hljs-string">"http://mlflow_server:5000"</span>)
+MODEL_NAME = os.getenv(<span class="hljs-string">"MLFLOW_MODEL_NAME"</span>, <span class="hljs-string">"YOLO_ParkMan_visdrone"</span>)
+MODEL_TAG = os.getenv(<span class="hljs-string">"MLFLOW_MODEL_TAG"</span>, <span class="hljs-string">"best_stability"</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">load_model</span><span class="hljs-params">()</span>:</span>
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+    <span class="hljs-comment"># Construct the model URI for the registry (e.g., models:/YOLO_ParkMan_visdrone@best_stability)</span>
+    model_uri = <span class="hljs-string">f"models:/<span class="hljs-subst">{MODEL_NAME}</span>@<span class="hljs-subst">{MODEL_TAG}</span>"</span>
+    <span class="hljs-keyword">return</span> mlflow.pytorch.load_model(model_uri)
+</div></code></pre>
+<p>Ovaj mehanizam omogućuje &quot;hot-swap&quot; modela u produkciji. Promocija nove, bolje verzije modela svodi se na promjenu taga (npr. premještanje taga <code>best_stability</code> s verzije 2 na verziju 3) unutar MLflow sučelja, bez potrebe za ponovnim pokretanjem ili izmjenom koda YOLO servisa.</p>
+<h3 id="63-odvajanje-treniranja-od-inferencije">6.3. Odvajanje treniranja od inferencije</h3>
+<p>Proces treniranja modela u potpunosti je odvojen od produkcijskog pipeline-a. Skripta <code>train_with_mlflow.py</code> izvršava se u zasebnom okruženju, ručno pokrenuta.</p>
+<p>Koraci u skripti za treniranje:</p>
+<ol>
+<li><strong>Pokretanje MLflow run-a:</strong> Svako treniranje se izvodi unutar <code>mlflow.start_run()</code> konteksta, čime se osigurava da su svi parametri i metrike vezani za jedinstveni ID pokretanja.</li>
+<li><strong>Logiranje metrika i artefakata:</strong> Tijekom i nakon treniranja, sve relevantne informacije se šalju na MLflow server.</li>
+<li><strong>Registracija modela:</strong> Nakon što je treniranje završeno i model evaluiran, najbolja verzija modela (<code>best.pt</code>) se registrira u MLflow Model Registry-ju.</li>
+</ol>
+<pre class="hljs"><code><div><span class="hljs-comment"># YOLOModelTraining/train_with_mlflow.py</span>
+
+<span class="hljs-comment"># ... (nakon završetka treniranja)</span>
+
+<span class="hljs-comment"># 1. Log the model artifacts to a temporary path</span>
+<span class="hljs-keyword">with</span> tempfile.TemporaryDirectory() <span class="hljs-keyword">as</span> tmp_dir:
+    local_model_path = os.path.join(tmp_dir, <span class="hljs-string">"model_build"</span>)
+    mlflow.pytorch.save_model(
+        pytorch_model=clean_YOLO_model(best_model),
+        path=local_model_path,
+        pip_requirements=[<span class="hljs-string">"ultralytics"</span>]
+    )
+    mlflow.log_artifacts(local_model_path, artifact_path=<span class="hljs-string">"model"</span>)
+
+<span class="hljs-comment"># 2. Register the model from the logged artifacts</span>
+model_uri = <span class="hljs-string">f"runs:/<span class="hljs-subst">{run.info.run_id}</span>/model"</span>
+reg_model = mlflow.register_model(model_uri, <span class="hljs-string">"YOLO_ParkMan_visdrone"</span>)
+</div></code></pre>
+<p>Ovo odvajanje omogućuje slobodno eksperimentiranje s različitim arhitekturama i hiperparametrima bez utjecaja na stabilnost produkcijskog sustava. Tek kada je nova verzija modela temeljito testirana i potvrđena, ona se pomoću taga označava te koristi u produkciji.</p>
+<h2 id="7-yolo-model">7. YOLO model</h2>
+<p>Za potrebe YOLO Servera se treniralo više kombinacija YOLO modela. Koristili su se YOLO11m i YOLO11s modeli.</p>
+<p>Prilikom treniranja, koristilo se više različitih kombinacija datasetova:</p>
+<ul>
+<li>visdrone dataset:
+<ul>
+<li>prilagođeni visdrone dataset na kojem se detektiraju samo vozila</li>
+</ul>
+</li>
+<li>visdrone + pklot dataset:
+<ul>
+<li>dataset koji koristi kombinaciju pklot (dataset za detekciju praznih i zauzetih mjesta temeljem parking kamera) i pklot dataseta, prilakođen za detekcju vozila</li>
+</ul>
+</li>
+<li>romania dataset:
+<ul>
+<li>vlastiti, ručno napravljen dataset</li>
+</ul>
+</li>
+</ul>
+<p>Trenirano je ukupno 6 YOLO modela te je provedena usporedba točnosti modela nad odgovarajućim test dijelovima dataseta (svaki dataset je imao svoj testni skup, što znači da se rezultati ne mogu usporediti).</p>
+<p>Naposlijetku je za produkciju izabran YOLO11 small model koji je pretreniran nad skupom podataka Rumunjske. To je osiguralo izrazito visoku preciznost modela (slike koje Image Fetcher dohvaća su one nad kojima je model trenirao) sa svrhom bolje demonstracije rada sustava za detekciju anomalija.</p>
+<p>Metrike tog modela su prikazane ispod:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Metrika</th>
+<th style="text-align:left">Vrijednost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Precision (Box)</td>
+<td style="text-align:left">0.9497</td>
+</tr>
+<tr>
+<td style="text-align:left">Recall (Box)</td>
+<td style="text-align:left">0.9590</td>
+</tr>
+<tr>
+<td style="text-align:left">mAP@50 (Box)</td>
+<td style="text-align:left">0.9806</td>
+</tr>
+<tr>
+<td style="text-align:left">mAP@50-95 (Box)</td>
+<td style="text-align:left">0.7924</td>
+</tr>
+<tr>
+<td style="text-align:left">Validation Box Loss</td>
+<td style="text-align:left">0.7818</td>
+</tr>
+<tr>
+<td style="text-align:left">Validation Class Loss</td>
+<td style="text-align:left">0.3926</td>
+</tr>
+<tr>
+<td style="text-align:left">Validation DFL Loss</td>
+<td style="text-align:left">0.9714</td>
+</tr>
+<tr>
+<td style="text-align:left">Train Box Loss</td>
+<td style="text-align:left">0.6195</td>
+</tr>
+<tr>
+<td style="text-align:left">Train Class Loss</td>
+<td style="text-align:left">0.3600</td>
+</tr>
+<tr>
+<td style="text-align:left">Train DFL Loss</td>
+<td style="text-align:left">0.9044</td>
+</tr>
+<tr>
+<td style="text-align:left">Learning Rate</td>
+<td style="text-align:left">0.0003</td>
+</tr>
+<tr>
+<td style="text-align:left">Model Fitness</td>
+<td style="text-align:left">0.7894</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-batch-processing-i-clickhousedb">8. Batch processing i ClickHouseDB</h2>
+<h3 id="81-razlozi-za-batch-obradu">8.1. Razlozi za batch obradu</h3>
+<ul>
+<li>tjedne distribucije</li>
+<li>trendovi zauzeća parkinga</li>
+</ul>
+<h3 id="82-nova-clickhouse-baza">8.2. Nova ClickHouse baza</h3>
+<p>Za potrebe analitike i batch obrade podataka, uvedena je <strong>ClickHouse</strong> baza podataka. ClickHouse je odabrana zbog svojih performansi u analitičkim upitima nad velikim količinama podataka (OLAP).</p>
+<p>Za trenutnu fazu (prikazanu u ovom projektu), koriste se dvije ključne tablice unutar <code>parking_db</code> baze:</p>
+<h4 id="1-tablica-parkingusage">1. Tablica <code>parking_usage</code></h4>
+<p>Ova tablica služi kao &quot;fact table&quot; koja pohranjuje sirove podatke o zauzetosti parkinga kroz vrijeme. Podaci se u ovu tablicu dodaju iz Redisa putem ETL procesa svakih sat vremena.</p>
+<p><strong>Shema tablice:</strong></p>
+<ul>
+<li><code>timestamp</code> (DateTime): Vrijeme uzorkovanja podatka.</li>
+<li><code>owner_id</code> (String): ID vlasnika parkinga.</li>
+<li><code>owner_full_name</code> (String): Ime i prezime vlasnika.</li>
+<li><code>parking_lot_id</code> (String): Jedinstveni identifikator parkinga.</li>
+<li><code>parking_lot_name</code> (String): Naziv parkinga.</li>
+<li><code>parking_spot_number</code> (Int32): Ukupan kapacitet parkinga.</li>
+<li><code>car_count</code> (Int32): Broj detektiranih vozila.</li>
+</ul>
+<p><strong>Optimizacija:</strong>
+Tablica koristi <code>MergeTree</code> engine.</p>
+<ul>
+<li><strong>Particioniranje:</strong> <code>(owner_id, toYYYYMM(timestamp))</code> - omogućuje efikasno upravljanje podacima po vlasnicima i mjesecima.</li>
+<li><strong>Sortiranje:</strong> <code>(owner_id, parking_lot_id, timestamp)</code> - optimizira upite koji filtriraju po vlasniku i parkingu te dohvaćaju vremenske serije.</li>
+</ul>
+<h4 id="2-tablica-parkingusagebaseline">2. Tablica <code>parking_usage_baseline</code></h4>
+<p>Ova tablica pohranjuje izračunate tjedne distribucije (baseline) zauzetosti za svaki parking. Koristi se za detekciju anomalija usporedbom trenutnog stanja s povijesnim prosjekom.</p>
+<p><strong>Shema tablice:</strong></p>
+<ul>
+<li><code>baseline_id</code> (String): Jedinstveni ID tjednog izračuna.</li>
+<li><code>calculation_date</code> (Date): Datum kada je prosjek izračunat.</li>
+<li><code>parking_lot_id</code> (String): Referenca na parking.</li>
+<li><code>hour_of_day</code> (UInt8): Sat u danu (0-23) za koji vrijedi statistika.</li>
+<li><code>avg_car_count</code> (Float64): Prosječan broj vozila (aritmetička sredina).</li>
+<li><code>std_dev_car_count</code> (Float64): Standardna devijacija (koristi se za Z-score).</li>
+<li><code>max_observed_cars</code> (Int32): Maksimalni zabilježeni broj vozila (za planiranje kapaciteta).</li>
+<li><code>sample_count</code> (Int32): Broj uzoraka korištenih za izračun.</li>
+<li><code>is_active</code> (UInt8): Zastavica koja označava je li ovo trenutno važeći baseline.</li>
+</ul>
+<p><strong>Optimizacija:</strong>
+Tablica koristi <code>ReplacingMergeTree</code> engine, što omogućuje ažuriranje zapisa (npr. deaktivaciju starih baseline-ova) zamjenom redaka s istim ključem sortiranja.</p>
+<ul>
+<li><strong>Sortiranje:</strong> <code>(parking_lot_id, hour_of_day, calculation_date)</code>.</li>
+</ul>
+<h3 id="83-tjedna-average-distribucija">8.3. Tjedna average distribucija</h3>
+<ul>
+<li>dohvat stare distribucije</li>
+<li>računanje nove</li>
+<li>usporedba i spremanje nove</li>
+<li>alert ako postoji odstupanje</li>
+</ul>
+<h2 id="9-dataset-management-i-kontrolirani-fault-injection">9. Dataset management i kontrolirani fault injection</h2>
+<p>U ovoj fazi projekta poseban je naglasak stavljen na upravljanje dataset-om i testiranje ponašanja MLOps pipeline-a u prisutnosti anomalnih ulaznih podataka. U tu svrhu uvedeni su:</p>
+<ul>
+<li>kontrolirano kreiran dataset</li>
+<li>pomoćni servis Bad Image Injector za simulaciju anomalija</li>
+</ul>
+<p>Cilj ovog projekta je pokazati da MLOps pipeline nije testiran samo na &quot;idealnim&quot; podacima, već i na namjerno narušenim scenarijima.</p>
+<h3 id="91-kreiranje-novog-dataset-a">9.1. Kreiranje novog dataset-a</h3>
+<p>Za potrebe treniranja i testiranja modela, kao i za simulaciju rada sustava u realnom vremenu, bilo je potrebno prikupiti vlastiti skup podataka. Taj dataset sadrži sekvencijalne slike parkinga u Rumunjskoj, preuzete tijekom razdoblja od 2 tjedna, gdje su se slike prikupljale svakih sat vremena. Dodatno je prikupljeno i tjedan dana slika iz parkinga u Milanu. Te slike su označene te su one činile jednu varijantu skupa podataka nad kojim se trenirao YOLO model. Slike iz grada u Rumunjskoj su se zatim koristile kao sekvencijalni niz slika za jedan konkretan parking u ParkMan sustavu. Time se omogućilo smisleno računanje distribucije parkinga kroz vrijeme. Slike iz Milana su se zatim koristile kao &quot;loše&quot; slike koje se injektirale u dataset kako bi pokvarile distribuciju tijekom testiranja sustava za uvid u anomalije.</p>
+<p>Proces prikupljanja podataka automatiziran je pomoću Python skripti (izvršavanih unutar Jupyter Notebook okruženja) koje periodički dohvaćaju slike s javno dostupnih IP kamera.</p>
+<p><strong>Izvori podataka:</strong>
+Korištene su javne kamere koje prikazuju parkirališta u različitim gradovima (Milano, lokacija u Rumunjskoj). Odabir kamera vršen je na temelju lakoće pristupa streamu i jasnog pogleda na parkirna mjesta.</p>
+<p><strong>Tehnička implementacija:</strong>
+Skripta za prikupljanje podataka (<code>periodic_image_save.ipynb</code>) funkcionira na sljedeći način:</p>
+<ol>
+<li><strong>Povezivanje na stream:</strong> Skripta šalje HTTP GET zahtjev na URL kamere. Budući te kamere koriste MJPEG (Motion JPEG) stream, skripta ne preuzima samo jednu statičnu sliku, već otvara stream i čita podatke u blokovima (<code>chunks</code>).</li>
+<li><strong>Parsiranje frame-ova:</strong> Unutar binarnog toka podataka, skripta traži početne (<code>0xFFD8</code>) i završne (<code>0xFFD9</code>) bajtove koji označavaju JPEG sliku. Na taj način se iz kontinuiranog video streama izdvaja jedan validan frame.</li>
+<li><strong>Spremanje i imenovanje:</strong> Izdvojena slika sprema se lokalno u definiranu mapu (<code>parking_spot_images</code>). Datoteke se imenuju uz precizan vremenski žig (npr. <code>parking_spot_2025-01-15_14-30-00.jpg</code>). Ovo je kasnije ključno za simulaciju &quot;vremenskog protoka&quot; u Image Fetcher servisu.</li>
+<li><strong>Periodičko izvršavanje:</strong> Skripta je konfigurirana da ponavlja ovaj proces u zadanim intervalima (svakih sat vremena), sve dok se ne prikupi željena količina podataka (definirana varijablom <code>COLLECTING_HOUR_LENGTH</code>).</li>
+</ol>
+<p>Ovaj pristup omogućio je stvaranje dataset-a koji je konzistentan za jedan konkretan parking u ParkMan sustavu.</p>
+<h3 id="92-motivacija-za-uvo%C4%91enje-bad-image-injector-a">9.2. Motivacija za uvođenje Bad Image Injector-a</h3>
+<p>U realnim sustavima za nadzor parkirališta, ulazni podaci često odstupaju od očekivanog obrasca. Mogu se pojaviti:</p>
+<ul>
+<li>slike praznog parkirališta u neuobičajeno vrijeme</li>
+<li>slike s ekstremnim brojem vozila</li>
+<li>slike koje ne odgovaraju prostornoj strukturi dataseta</li>
+<li>slike koje narušavaju povijesnu distribuciju zauzeća</li>
+</ul>
+<p>Ako se pipeline testira isključivo na &quot;čistom&quot; dataset-u:</p>
+<ul>
+<li>sustav može djelovati stabilno</li>
+<li>batch analiza neće otkriti slabosti</li>
+<li>anomalije se neće manifestirati u metrikama</li>
+</ul>
+<p>Zbog tog razloga uveden je Bad Image Injector koji omogućuje kontrolirano i reproducibilno narušavanje dataset-a bez promjene u glavnom pipeline-u.</p>
+<h3 id="93-uloga-bad-image-injector-a-u-arhitekturi">9.3. Uloga Bad Image Injector-a u arhitekturi</h3>
+<p>Bad Image Injector je pomoćni servis koji:</p>
+<ul>
+<li>ne sudjeluje u redovnom inference toku</li>
+<li>ne komunicira s YOLO servisom</li>
+<li>ne mijenja logiku Image Fetcher-a i Image Processor-a</li>
+</ul>
+<p>Njegova zadaća je ubacivanje anomalnih slika u dataset na način koji je u potpunosti transparentan ostatku sustava. Time se ponaša kao generalni izvor grešaka, a ne kao workaround ili debug alat.</p>
+<h3 id="94-na%C4%8Din-rada">9.4. Način rada</h3>
+<p>Bad Image Injector radi u sljedećim koracima:</p>
+<ol>
+<li>Dohvaća postojeće slike iz MinIO storage-a</li>
+<li>Odabire ciljani timestamp za injekciju (trenutno vrijeme ili ručno definirano)</li>
+<li>Priprema anomalne slike</li>
+<li>Sprema slike u isti bucket s modificiranim key-em</li>
+<li>Slika postaje dio regularnog ingestion reda</li>
+</ol>
+<h3 id="95-odabir-ciljanog-timestamp-a">9.5. Odabir ciljanog timestamp-a</h3>
+<p>Bad Image Injector koristi timestamp-based sustav imenovanja kako bi se:</p>
+<ul>
+<li>anomalna slika pojavila točno u željenom trenutku</li>
+<li>osiguralo da Image Fetvher obradi sliku u predviđenom redoslijedu</li>
+</ul>
+<p>Primjeri scenarija:</p>
+<ul>
+<li>injekcija anomalije odmah nakon zadnje &quot;normalne&quot; slike</li>
+<li>ubacivanje anomalije usred tjednog intervala</li>
+<li>simulacija naglog skoska u zauzeću parkinga</li>
+</ul>
+<p>Ovaj pristup omogućuje preciznu kontrolu nad eksperimentom.</p>
+<h3 id="96-implementacija-injekcija-slike-u-minio">9.6. Implementacija: injekcija slike u MinIO</h3>
+<p>Bad Image Injector direktno komunicira s MinIO/S3 storage-om. Injekcija se svodi na spremanje nove slike s validnik key-em:</p>
+<pre class="hljs"><code><div>s3.put_object(
+    Bucket=BUCKET_CAMERA,
+    Key=target_key,
+    Body=image_bytes,
+    ContentType=<span class="hljs-string">"image/jpeg"</span>
+)
+</div></code></pre>
+<p>Budući da se koristi isti bucket i ista naming konvencija:</p>
+<ul>
+<li>Imaga Fetcher automatski prepoznaje slike</li>
+<li>Nema potrebe za dodatnim flagovima ili metapodacima</li>
+</ul>
+<h3 id="97-tipovi-simuliranih-anomalija">9.7. Tipovi simuliranih anomalija</h3>
+<p>U ovoj fazi projekta fokus je na jednostavnim, ali efektivnim anomalijama. Budući da se za YOLO servis uvijek pripremaju slike sa istog parkirališta, Bad Image Injector uzima slike sa drugog parkirališta na kojima u potpunosti ili gotovo nema automobila.</p>
+<p>Ovakav slučaj dovoljan je za testiranje:</p>
+<ul>
+<li>batch agregacije</li>
+<li>tjednih distribucija</li>
+<li>usporedbe s povijesnim prosjekom</li>
+</ul>
+<h3 id="98-uloga-bad-image-injector-a-u-batch-analizi">9.8. Uloga Bad Image Injector-a u batch analizi</h3>
+<p>Anomalne slike koje Bad Image Injector ubacuje:</p>
+<ul>
+<li>prolaze kroz cijeli pipeline</li>
+<li>ulaze u ClickHouseDB</li>
+<li>utječu na tjedne distribucije zauzeća</li>
+</ul>
+<p>Time se omogućuje:</p>
+<ul>
+<li>provjera osjetiljivosti batch analize</li>
+<li>validacija detekcije odstupanja</li>
+<li>simulacija realnih &quot;incident&quot; scenarija</li>
+</ul>
+<h2 id="10-state-management-i-konzistentnost">10. State management i konzistentnost</h2>
+<p>U MLOps pipeline-u koji obrađuje vremenski organizirane podatke, upravljanje stanjem (state management) predstavlja ključni mehanizam za osiguravanje determinističkog ponašanja, konzistentnosti obrade i izbjegavanje dupliciranja podataka.</p>
+<p>State management je u ovom projektu centraliziran pomoću Redis baze, koja služi kao lagana, brza i pouzdana komponenta za dijeljenje stanja između iteracija pipeline-a.</p>
+<h3 id="101-motivacija-za-uvo%C4%91enje-state-management-a">10.1. Motivacija za uvođenje state management-a</h3>
+<p>Bez eksplicitnog upravljanja stanjem, MLOps pipeline bi imao sljedeće probleme:</p>
+<ul>
+<li>ponovna obrada istih slika</li>
+<li>nemogućnost nastavka rada nakon restarta servisa</li>
+<li>nekonzistentni redoslijed obrade</li>
+<li>nemogućnost preciznog batch grupiranja po vremenu</li>
+</ul>
+<p>S obzirom na to da se ingestion temelji na timestamp-u, stanje sustava mora sadržavati informaciju o tome koja je zadnja slika obrađena.</p>
+<h3 id="102-redis-kao-centralni-state-store">10.2. Redis kao centralni state store</h3>
+<p>Redis je odabran kao centralni store stanja zbog sljedećih razloga:</p>
+<ul>
+<li>izuzetno brze operacije čitanja i pisanja</li>
+<li>jedostavna integracija s Python servisima</li>
+<li>in-memory priroda (niska latencija)</li>
+<li>mogućnost jednostavnog resetiranja stanja u eksperimentalnom okruženju</li>
+</ul>
+<p>Redis se koristi isključivo za state, a ne za pohranu rezultata ili podataka visoke trajnosti.</p>
+<h3 id="103-klju%C4%8Devi-stanja-u-sustavu">10.3. Ključevi stanja u sustavu</h3>
+<p>Implementirani su sljedeći ključevi:</p>
+<ul>
+<li><code>image_fetcher:last_ts</code>
+<ul>
+<li>timestamp zadnje uspješno poslane slike</li>
+</ul>
+</li>
+<li><code>image_fetcher:last_key</code>
+<ul>
+<li>S3 key zadnje poslane slike (debug ili audit svrhe)</li>
+</ul>
+</li>
+</ul>
+<p>Ovi ključevi predstavljaju minimalni, ali dovoljan state potreban za determinističko ponašanje pipeline-a.</p>
+<h3 id="104-kori%C5%A1tenje-state-a-u-image-fetcher-u">10.4. Korištenje state-a u Image Fetcher-u</h3>
+<p>Image Fetcher koristi Redis state u svakom ciklusu rada:</p>
+<ol>
+<li>Čita <code>last_ts</code> i <code>last_key</code></li>
+<li>Lista objekte u MinIO bucket-u</li>
+<li>Parsira timestamp iz ključeva</li>
+<li>Bira prvu sliku za koju vrijedi <code>ts &gt; last_ts</code></li>
+<li>Šalje Kafka poruku</li>
+<li>Ako je poruka uspješno poslana, ažurira Redis state</li>
+</ol>
+<pre class="hljs"><code><div>last_ts, last_key = get_last_state(redis_client)
+
+next_key, next_ts = pick_next_key_by_timestamp(keys, last_ts)
+
+producer.send(TOPIC, payload)
+producer.flush()
+
+set_last_state(redis_client, next_ts, next_key)
+</div></code></pre>
+<p>Ovim redoslijedom osigurava se da:</p>
+<ul>
+<li>state ne ode ispred stvarne obrade</li>
+<li>ne dolazi do preskakanja slika</li>
+</ul>
+<h3 id="105-konzistentnost-kroz-ponovna-pokretanja-i-padove-servisa">10.5. Konzistentnost kroz ponovna pokretanja i padove servisa</h3>
+<p>Jedna od važnih prednosti Redis-based state management-a je otpornost na restart servisa.</p>
+<p>Scenarij:</p>
+<ul>
+<li>Image Fetcher se zaustavi (crash, redeploy)</li>
+<li>Redis ostaje aktivan</li>
+<li>Nakon ponovnog pokretanja:
+<ul>
+<li>Fetcher čita <code>last_ts</code></li>
+<li>nastavlja obradu od sljedeće slike</li>
+</ul>
+</li>
+</ul>
+<p>Na taj način:</p>
+<ul>
+<li>nema potrebe za ručnim intervencijama</li>
+<li>pipeline se ponaša predvidljivo</li>
+<li>izbjegava se ponovna obrada već procesiranih podataka</li>
+</ul>
+<h3 id="106-interakcija-state-a-s-bad-image-injector-om">10.6. Interakcija state-a s Bad Image Injector-om</h3>
+<p>Bad Image Injector namjerno ne koristi Redis state, ali ga indirektno iskorištava:</p>
+<ul>
+<li>injektirana slika dobiva validan timestamp</li>
+<li>Image Fetcher je vidi kao regularnu sljedeću sliku</li>
+<li>Redis state se normalno ažurira nakon obrade animalije</li>
+</ul>
+<h2 id="11-ograno%C4%8Denja-i-poznati-trade-off-ovi">11. Ogranočenja i poznati trade-off-ovi</h2>
+<p>Iako MLOps infrastruktura razvijena u fazi 4 projekta ParkMan zadovoljava ciljeve eksperimentalnog okruženja, sustav ima niz svjesno prihvaćenih ograničenja i dizajnerskih trade-off-ova.</p>
+<p>Ovo poglavlje opisuje ta ograničenja, razloge iza njih te implikacije na stabilnost, skalabilnost i budući razvoj sustava.</p>
+<p>Popis ograničenja i poznatih trade-off-ova:</p>
+<ul>
+<li>Sustav pretpostavlja statičnu poziciju kamere i konzistentan pogled na parkiralište. ROI u Image Processor-u je fiksno definiran relativno na dimenzije slike, što pojednostavljuje obradu, ali ne tolerira promjene kuta ili pozicije kamere.</li>
+<li>Ingestion se temelji na timestamp-u ugrađenom u naziv S3 ključa. Ovaj pristup omogućuje deterministički redoslijed obrade, ali zahtijeva strogo poštivanje naming konvencije dataset-a.</li>
+<li>Image Fetcher u svakom ciklusu lista ograničen broj objekata iz bucket-a i parsira timestamp za svaki ključ. Rješenje je robusno i jednostavno za razumijevanje, ali ne skalira optimalno na vrlo velike dataset-ove.</li>
+<li>Upravljanje stanjem u Redis-u svodi se na minimalni set ključeva (<code>last_ts</code>, <code>last_key</code>). Time se postiže jednostavnost i reproducibilnost, uz cijenu izostanka granularnog praćenja statusa obrade po slici</li>
+<li>YOLO inferencija se izvodi putem lokalnog inference servera, bez horizontalnog skaliranja. Ovaj pristup smanjuje latenciju i olakšava debugiranje, ali nije prilagođen visoko-opterećenim produkcijskim scenarijima.</li>
+<li>Batch analiza se izvodi periodično, s fokusom na agregirane metrike poput tjednih distribucija zauzeća. Sustav ne reagira u realnom vremenu na anomalije.</li>
+<li>Bad Image Injector koristi ručno definirane anomalije i ne generira kompleksne sintetičke poremećaje. Injektiranje slike ostaju u dataset-u i zahtijevaju ručno uklanjanje ako više nisu potrebne.</li>
+<li>Nisu napravljene mjerljive usporedbe između performansi različitih treniranih YOLO modela, odnosno YOLO modeli su trenirani na tri različita dataseta sa tri različita test skupa. Ta treniranja su bila korištena samo za demonstracijske svrhe.</li>
+<li>Model koji se koristi u sustavu je pretreniran nad datasetom Rumunjske kako bi se lakše demonstrirao sustav detekcije anomalija.</li>
+</ul>
+<p>Sva navedena ograničenja predstavljaju svjesne dizajnerske odluke prilagođene eksperimentalnoj prirodi projekta te služe kao jasna polazišta za budući razvoj sustava.</p>
+<h2 id="12-mogu%C4%87i-budu%C4%87i-razvoj">12. Mogući budući razvoj</h2>
+<p>U ovom poglavlju naveden je popis mogućih budućih smjerova razvoja projekta.</p>
+<ol>
+<li>Dinamički ROI i podrška za više kamera
+<ul>
+<li>Image Processor bi se mogao proširiti dinamičkim određivanjem ROI-ja (npr. na temelju kalibracije kamere ili početne detekcije), čime bi se omogućila podrška za više parkirališta i promjenjive kutove snimanja</li>
+</ul>
+</li>
+<li>Automatski retraining modela
+<ul>
+<li>Batch analiza i povijesni podaci iz ClickHouseDB-a mogu poslužiti kao okidač za automatsko ponovno treniranje YOLO modela u slučaju promjene distribucije podataka</li>
+</ul>
+</li>
+<li>Detekcija data i concept drift-a
+<ul>
+<li>Uvođenje statističkih testova ili modela za drift detection moguće je rano otkriti promjene u ponašanju sustava (npr. sezonalnost ili promjene navika parkiranja)</li>
+</ul>
+</li>
+<li>Skaliranje inferencije
+<ul>
+<li>YOLO inference servis može se prilagoditi horizontalnom skaliranju (npr. više instanci servisa) kako bi sustav mogao podnijeti veći broj ulaznih slika</li>
+</ul>
+</li>
+<li>Napredniji fault injection
+<ul>
+<li>Bad Image Injector može se proširiti generiranjem sintetičkih anomalija (blue, noise, occlusion) kako bi se testirala robusnost modela na realnije poremećaje</li>
+</ul>
+</li>
+<li>Kubernetes orkestracija
+<ul>
+<li>Migracija s Docker Compose okruženja na Kubernetes omogućila bi bolju skalabilnost, upravljanje resusrsima i visoku dostupnost sustava</li>
+</ul>
+</li>
+</ol>
+<h2 id="13-zaklju%C4%8Dak">13. Zaključak</h2>
+<p>U fazi 5 projekta ParMan razvijena je funkcionalna MLOps infrastruktura koja nadograđuje postojeći sustav za detekciju vozila kontroliranim ingestionom podataka, prostornom normalizacijom ulaznih slika i odvojenom inferencijom i batch analizom.</p>
+<p>Korištenjem vremenski organiziranog dataset-a, Redis-based state management-a i MLflow registry-ja postignuta je deterministička i reproducibilna obrada podataka, što je temelj svakog ozbiljnog MLOps sustava.</p>
+<p>Uvođenje Image Processora i Bad Image Injecotr-a omogućilo je stabilniji rad modela te testiranje ponašanja sustava izvan idealnih scenarije, čime je pipeline validiran i na anomalnim podacima.</p>
+<p>Iako sustav ima svjesno prihvaćena ograničenja, ona proizlaze iz eksperimentalne prirode projekta te predstavljaju jasne smjernice za budući razvoj.</p>
+<p>Ova faza projekta pokazuje kako se računalni vid može integrirati u širi MLOps kontekst, prelazeći s izolirane model-inferencije prema cjelovitom, skalabilnom i proširivom sustavu</p>
+
+</body>
+</html>
