@@ -26,7 +26,7 @@ services:
       - ./redis/.env.shared.ManagerApp.MobileApp
       - ./S3Storage/minio.api-voditelj.shared.env
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.3
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
@@ -38,7 +38,10 @@ services:
       - --metrics.prometheus=true
       - --metrics.prometheus.buckets=0.1,0.3,1.2,5.0
       - --metrics.prometheus.addEntryPointsLabels=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
       - --accesslog
+    
+      
     ports:
       - 8001:80
       - 8080:8080

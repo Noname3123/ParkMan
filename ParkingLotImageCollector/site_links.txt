@@ -1,0 +1,9 @@
+Meridian US - http://67.61.139.162:8080/#view (open, prakticki realtime video stream) # NE UZIMAJ
+
+Asahi, Japan - NE RADI
+
+Koserow, njemacka - http://87.139.153.80/cgi-bin/faststream.jpg?stream=half&fps=15&rand=COUNTER 
+
+Milano - http://89.97.231.70:8083/control/userimage.html (http://89.97.231.70:8083/cgi-bin/DownloadLiveImage)
+
+Braila, Rumunjska - http://86.127.212.219/cgi-bin/faststream.jpg?stream=half&fps=15&rand=COUNTER

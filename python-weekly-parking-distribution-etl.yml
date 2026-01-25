@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  etl_weekly_parking_distribution:
+    build: ./ETL_WEEKLY_PARKING_DISTRIBUTION
+    container_name: etl_weekly_parking_distribution
+    expose:
+      - "9396"
+    env_file:
+      - ./ETL_WEEKLY_PARKING_DISTRIBUTION/.env
+    depends_on:
+      mongo_manager_db_service:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network

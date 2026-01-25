@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  mlflow_server:
+    build:
+      context: ./MLFlow
+      dockerfile: mlflow.dockerfile
+    container_name: mlflow_server
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9901
+      - MLFLOW_S3_IGNORE_TLS=true
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+    env_file:
+      - ./S3Storage/minio.env
+      - ./S3Storage/minio.api-voditelj.shared.env
+    command: mlflow server --backend-store-uri sqlite:////mlflow/mlflow.db --default-artifact-root s3://mlflow/ --host 0.0.0.0
+    networks:
+      - cv-network
+    volumes:
+      - ./mlflow_data:/mlflow

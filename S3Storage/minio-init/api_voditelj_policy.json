@@ -14,7 +14,8 @@
           "s3:GetBucketLocation"
       ],
       "Resource": [
-        "arn:aws:s3:::safe-storage-parking-lot-*"
+        "arn:aws:s3:::safe-storage-parking-lot-*",
+        "arn:aws:s3:::camera-images-parking-lot-*/*"
       ]
     },
     {

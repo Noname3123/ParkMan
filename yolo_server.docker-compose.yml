@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  yolo_server:
+    container_name: yolo_server
+    build:
+      context: ./Image_Processing/YOLOServer
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - cv-network
+    runtime: nvidia #use gpu
+    environment:
+       - NVIDIA_VISIBLE_DEVICES=all
+       - MLFLOW_TRACKING_URI=http://mlflow_server:5000
+       - MLFLOW_S3_ENDPOINT_URL=http://minio:9901
+       - MLFLOW_MODEL_NAME=YOLO_ParkMan_visdrone
+       - MLFLOW_MODEL_TAG=production
+       - AWS_ACCESS_KEY_ID=minioadmin
+       - AWS_SECRET_ACCESS_KEY=minioadmin
+       - MLFLOW_S3_IGNORE_TLS=true
+    env_file:
+       - ./S3Storage/minio.env
+       - ./S3Storage/minio.api-voditelj.shared.env
+
+    depends_on:
+      car-counter:
+        condition: service_started

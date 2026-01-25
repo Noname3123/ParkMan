@@ -1,4 +1,3 @@
-
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA512
 
@@ -8,34 +7,33 @@ Hash: SHA512
   "signedByOrg": "grafana",
   "signedByOrgName": "Grafana Labs",
   "plugin": "grafana-clickhouse-datasource",
-  "version": "4.9.0",
-  "time": 1747781385279,
+  "version": "4.12.0",
+  "time": 1768337491569,
   "keyId": "7e4d0c6a708866e7",
   "files": {
-    "CHANGELOG.md": "40184efbe7e88642d1a5d4961cc6d1b6f64ee901e9e82f36284d565d51f992f5",
     "LICENSE": "cdd15e614b50e88443fe574ad56bde5ba697d958a45376431638eea816e3bfc3",
-    "README.md": "01c2a56425fa4fb836dcb30b7575b0ed031be483567704025e160497e5002e24",
-    "dashboards/cluster-analysis.json": "7f83d4d09cc6f045768f5bf47485b864dd6da03094f8607808dec77cb96902e5",
-    "dashboards/data-analysis.json": "71695f08dfad47f3d4da4c2d331a09eb8fe5789520d5566fffeecd626079caa1",
-    "dashboards/opentelemetry-clickhouse.json": "1a710a750988fdcd7d788e8aef001c1fb106e00253ea0208c2963d9a71d717e8",
+    "module.js": "386f5c0873b6b46ff365e731952176e7842b9004e1ce5fb429e246cf99ba43df",
+    "CHANGELOG.md": "eb542b0bc069abaccd077f639e0091043c10b75627db8b704786b79620658841",
+    "plugin.json": "3387b3515de38c68764a5f65995707318d3d0ed214dda00fb120f267923b7608",
+    "dashboards/opentelemetry-clickhouse.json": "f9f79f7d2c1059f842ddddddebd810f538fb619621c5dbd0e0fd85bcd2ac2914",
+    "dashboards/data-analysis.json": "15c4ea2dbaf906dffbb6845eb9c9c3299e6fbd614db356db5e3655263a76c7a4",
     "dashboards/query-analysis.json": "1b2006a3f4142e512e50156a7d2fd8cf03a178019aaccc964c0283c8559298b3",
-    "dashboards/system-dashboards.json": "a47eb47b9cd0bea82a7276fc805bba214164e677f68fb1e821b0278b17bee7f0",
-    "go_plugin_build_manifest": "be4052736a10582b3645c669ad007537183f19418d688d71ce7f05df5f9c0532",
-    "gpx_clickhouse_linux_amd64": "e1362dce555ab59a847b29dadc4a49ab3dcc60b3170e8e224149d2cc984ac95b",
-    "img/logo.svg": "838199055d86584ff105e5e91013203a6acb7d3f2061ae27678786125ab11f09",
-    "module.js": "41182baf4a92a2a9628892546d9d022cae0c35b9252e43f07bd0a8e6de9bd63b",
-    "module.js.map": "bc5bcfff53cecd22e6a7157d3e46c1ee49e3f4620194cd819a08ff0ef7aba031",
-    "plugin.json": "e585ce369c4c76ce8562687ed88e22d8a89410a5f858e5d329363025023d61b2"
+    "dashboards/cluster-analysis.json": "7f83d4d09cc6f045768f5bf47485b864dd6da03094f8607808dec77cb96902e5",
+    "dashboards/system-dashboards.json": "017881431af913d3c8f776b4dab51e8a153745b016a964bb1ec3c99f52704af4",
+    "module.js.map": "7df76df3634be64fc58f061639e5211d0266df0b90a58b9618783ef36632c79d",
+    "README.md": "009d32a0f974346a63a190ccb94c862bbe3d205653d45bf4d4cd01fe15655873",
+    "gpx_clickhouse_linux_amd64": "aba0bb088ac523a35c3717df9b5d53657b329fae06a63994e31151e5eeea9cdf",
+    "go_plugin_build_manifest": "d61c969c6586281ec19cec00198a66b5f028ef61f8b4ee2f6a666a650bf9f7ba",
+    "img/logo.svg": "838199055d86584ff105e5e91013203a6acb7d3f2061ae27678786125ab11f09"
   }
 }
 -----BEGIN PGP SIGNATURE-----
-Version: OpenPGP.js v4.10.11
-Comment: https://openpgpjs.org
 
-wrkEARMKAAYFAmgtBwkAIQkQfk0ManCIZucWIQTzOyW2kQdOhGNlcPN+TQxq
-cIhm50XFAgkAJYOgIYv0j6zNnW9T9xYvHS7QOBBHqaoKIRab7w1R/3qRD59G
-MMm8Ot262ukOUp9glAuIxtCUuDaaLKQrXcnqTBoCCQFYdsD+yznOIGmzxdf6
-QS+fVJ/DIr3C+nBslcMRChHSFM4kBEVk8smw3+uUHriezTVj3obuXczC8z7H
-YIqx4v0UJg==
-=lZ+p
+wsA+BAETCgBtBYJpZrBTCRB+TQxqcIhm50UUAAAAAAAcACBzYWx0QG5vdGF0
+aW9ucy5vcGVucGdwanMub3Jn8Wv1Z/sN56GfSWTk2+ZASzfeY0ZXofNzL+ZZ
+sI6v6wAWIQTzOyW2kQdOhGNlcPN+TQxqcIhm5wAAkzgCCI3K02ZLYjTc1nkd
+mIiEPcxREWmwEJQCTplDdzJ7ZhWkRNxVErnIvsiDvRyuwdFQd7duYwNLOoHH
+o3yRRw8FxXSFAgkBadLIaVgKLlDuZMRVkgnOeow7XCwpIwOrznYHDxnwtNGX
+04dicslrm2VD53IQ1o/G76DiHRJqhpJ/Ux+UG7BehLo=
+=qJ4+
 -----END PGP SIGNATURE-----

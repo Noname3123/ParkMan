@@ -26,4 +26,8 @@
             <path>/var/lib/clickhouse/access/</path>
         </local_directory>
     </user_directories>
+    <access_control>
+        <enabled>true</enabled>
+    </access_control>
+
 </clickhouse>

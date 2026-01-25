@@ -20,7 +20,7 @@ s3 = boto3.client(
 )
 BUCKET = os.getenv("BUCKET_EDIT")
 
-YOLO_ENDPOINT = os.getenv("YOLO_ENDPOINT")
+YOLO_ENDPOINT = os.getenv("YOLO_ENDPOINT", "http://yolo_server:8000/predict")
 
 
 def yolo_remote_count(img_bytes: bytes) -> int:
@@ -31,8 +31,11 @@ def yolo_remote_count(img_bytes: bytes) -> int:
         resp.raise_for_status()
         data = resp.json()
         return int(data.get("car_count", 0))
-    except (requests.RequestException, ValueError):
+    except (requests.RequestException, ValueError) as e:
+       
+        print(f"[YOLO ERROR] {e}")
         return -1   # -1 = greška, možeš logati detaljnije
+
 
 
 @app.post("/process")
