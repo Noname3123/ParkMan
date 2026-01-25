@@ -102,10 +102,6 @@ U ovoj nadogradnji sustava ParkMan, cilj je bio proširiti postojeće funkcional
 Na sljedećoj poveznici je detaljnija dokumentacija projekta ParkMan:
     - [Onedrive](https://uniri-my.sharepoint.com/:b:/g/personal/benjamin_jakupovic_uniri_hr1/IQBxKCiG_vY7TqhrMb42BgwBATg140KsFKUupPaZixg55SY?e=DsJmTs)
 
-### 1.5. Poveznica na projekt
-Na sljedećoj poveznici je postavljen projekt parkman:
-    - [Github](https://github.com/Noname3123/ParkMan/tree/main)
-
 ## 2. Pregled MLOps arhitekture
 
 Ovo poglavlje opisuje MLOps arhitekturu uvedenu u fazi 5 projekta ParkMan, s fokusom na infrastrukturu, tok podataka i integraciju strojnog učenja u produkcijski pipeline. Arhitektura je dizajnirana kao event-driven mikroservisni sustav, u kojem se pomoću message brokera prosljeđuju podaci (slike) modelu (serviranom i verzioniranom pomoću mlflow-a), koji izvršava inferenciju te se sa batch procesima osigurava spremanje rezultata inferencije za daljnju analitiku.
