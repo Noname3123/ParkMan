@@ -14,6 +14,12 @@
 
 U ovom dokumentu se prikazuje tehnička dokumentacija nadogradnje sustava Parkman.
 
+### 1.2. Nadogradnja
+
+U ovoj nadogradnji sustava ParkMan, cilj je bio proširiti postojeće funkcionalnosti sustava dodavanjem:
+- sustava za verzioniranje modela (MLFlow), što olakšava postupak praćenja eksperimenata i postavljanje modela računalnog vida.
+- praćenja prosječne distribucije korištenosti parkinga kroz vrijeme, kako bi se osiguralo pravovremeno upozoravanje vlasnika na nedosljednosti u zauzetosti parkinga.
+
 ### 1.2. Povezana dokukentacija
 Na sljedećoj poveznici je detaljnija dokumentacija projekta ParkMan:
     - [Onedrive](https://uniri-my.sharepoint.com/:b:/g/personal/benjamin_jakupovic_uniri_hr1/IQBxKCiG_vY7TqhrMb42BgwBATg140KsFKUupPaZixg55SY?e=DsJmTs)
@@ -24,53 +30,72 @@ Ovo poglavlje opisuje MLOps arhitekturu uvedenu u fazi 5 projekta ParkMan, s fok
 
 ### 2.1. High level arhitektura
 ![IIS_diagram](IIS_diagram.drawio.png)
-- navesti komponente uz kratak opis
+
 
 Na visokoj razini, MLOps arhitektura sastoji se od sljedećih glavnih komponenti:
 1. **Image Fetcher**
-    - Servis zadužen za vremenski kontroliran dohvat slika iz dataseta (jedna slika po satu), uz osiguravanje konzistentnog redoslijeda obrade
+    - Servis zadužen za vremenski kontroliran dohvat slika iz dataseta (jedna slika po satu u stvarnom svijetu, odnosno jedna slika na dvije sekunde prilikom testiranja), uz osiguravanje konzistentnog redoslijeda obrade (sekventno po vremenu). Ovaj servis simulira kameru na parkingu koja svakih sat vremena prosljeđuje sliku modelu kako bi za taj parking se odredio broj parkiranih vozila 
 2. **Image Processor**
-    - Provodti prostornu normalizaciju ulaznih slika (izrezivanje parking zone) kako bi se YOLO modelu isporučivao samo relevantan dio slike
+    - Provodi prostornu normalizaciju ulaznih slika (izrezivanje parking zone) kako bi se YOLO modelu isporučivao samo relevantan dio slike. Model tu (obrađenu) sliku sprema u **S3 bucket** s dodatnim transformacijama (kreirajući potencijalni, obrađeni dataset za dotreniravanje modela, uz napomenu da transformacije nisu implementirane) i istovremeno prosljeđuje **Car counter-u** sliku za detekciju. Također sprema neobrađenu kopiju slike u sigurni **S3 bucket** za taj parking, kojem jedino vlasnik tog parkinga ima pristup. Taj bucket ima retention policy od 30 dana.
 3. **YOLO Inference Server (Car Counter)**
-    - Lokalni servis za inferenciju koji prima obrađene slike i vraća broj detektiranih vozila
+    - Lokalni servis za inferenciju koji prima obrađene slike iz **image processor-a** i vraća broj detektiranih vozila. Servis učitava model sa MLflow registry-a (model koji je označen kao **production**).
+    - Ovaj mikroservis je podijeljen na dva dijela:
+        - **Car Counter**, servis koji prima slike obrađene slike koje **image processor** proslijedi, poziva api **YOLO Server-a** za inferenciju i dobiva broj vozila za parking. Taj broj vozila se zapisuje u **Redis** bazu, mijenjajući prethodni zapis za taj parking u **Redisu**.
+        - **YOLO server** mikroservis koji učitava odgovarajući model s MlFLow-a (označen kao **production**) te izlaže endpoint za inferenciju modela pomoću FastAPI aplikacije.
+
 4. **MLflow Server**
-    - Služi kao registry i izvor istine za verzije modela korištene u inferenciji
+    - Služi kao registar modela i izvor istine za verzije modela korištene u inferenciji. U MLFlow-u su se zapisivali rezultati treniranja modela (metrike tijekom treniranja, parametri modela, konfiguracijske datoteke korištenog skupa podataka, artefakti stvoreni tijekom treniranja modela te konačne težine modela). Trenirani modeli su se registrirali u mlflowu te su se dodale odgovarajue oznake (npr. oznaka **production**), kako bi se mogao definirati model koji će drugi mikroservisi preuzeti.
+
 5. **MinIO (S3 Storage)**
-    - Pohranjuje originalne i procesirane slike te database artefakte
+    - Služi kao pohrana za slike s parking kamera te uključuje pohranu "raw" slika (za simulaciju rada parking kamere), pohranu obrađenih slika (npr. Area of interest extraction) koje se prosljeđuju modelu, pohranu obrađenih slika za dotreniravanje modela te pohranu neobrađenih slika parkinga za sigurnosne potrebe.
+
 6. **Redis**
-    - Drži stanje pipeline-a radi sprječavanja ponovne obrade istih podataka
+    - Baza podataka za svaki parking sprema trenutno stanje auta na parkingu te timestamp ažuriranja tog unosa, kako bi se mogao pratiti redoslijed slika koje će **Image fetcher** proslijediti modelu iz pohrane za simulaciju rada parking kamere.
+
 7. **ClickHouseDB**
-    - Baza podataka za batch obradu i agregaciju rezultata (tjedne distribucije, prosjeci i detekcija odstupanja)
+    - Baza podataka koja se koristi za potrebe analitike korištenosti parkinga. (prosjeci distribucija zauzetosti parkinga po danima u tjednu i detekcija odstupanja te praćenje korištenosti parkinga kroz vrijeme)
+
+8. **Prometheus**
+    - Servis za praćenje rada sustava (baze, etl servisi) te spremanje varijable koja se koristi za ažuriranje alarma za nedosljednost u distribuciji korištenja parkinga.
+9. **Grafana**
+    - Servis koji vlasniku parkinga omogućuje praćenje metrika parkinga (korištenost parkinga kroz vrijeme, prosječna distribucija korištenosti te praćenje alarma o nedosljednosti).
+10. **ETL servisi**
+    - Batch servisi koji su ključni za analitiku:
+        - **Parking usage** servis, koji svakih sat vremena (neposredno nakon što model ažurira unos u Redisu), preuzima trenutno stanje za parkinge u Redisu te ih sprema u **ClickhouseDB** radi praćenja povijesti korištenosti tog parkinga
+        - **Weekly parking distribution** servis, koji svakih tjedan dana preuzima povijest parkinga iz **ClickhouseDB**, izračunava prosječnu zauzetost parkinga po satu (tijekom svih 7 dana) te sprema novu tjednu distribuciju u **ClickhouseDB**. Ovaj servis također uspoređuje prethodnu prosječnu zauzetost parkinga te temeljem uspredbe distribucija (preko apsolutne razlike, relativne razlike i Z-testa) definira postoji li odstupanje između nove i prethodne distribucije. U slučaju da postoji, postavlja se alarm u **Prometheusu** te se promjena prikazuje u **Grafani**.
+11. **Kafka**:
+    - Message broker koji se koristi za stremaning slika između **S3 storage-a** i **image processor-a**
 
 Komponente su orkestrirane putem Docker infrastrukture, dok se komunikacija između servisa temelji na jasnoj podjeli odgovornosti i minimalnoj međuzavisnosti.
 
 ### 2.2. Event & data flow
 MLOps pipeline u fazi 5 slijedi deterministički i ponovljiv tok podataka, prikazan u nastavku:
 1. **Vremenski dohvat slike**
-    - Image Fetcher dohvaća sliku iz MinIO Storage-a na temelju timestamp-a (jedna slika po satu), pri čemu koristi Redis kako bi osigurao da se slike ne obrađuju više puta
+    - Image Fetcher simulira kameru koja uzima sliku parkinga, tako da dohvaća sliku iz MinIO Storage-a na temelju timestamp-a (jedna slika po satu), pri čemu koristi Redis kako bi osigurao da se slike ne obrađuju više puta.
 2. **Pohrana i prosljeđivanje**
-    - Dohvaćena slike ostaje pohranjena u MinIO-u, a metapodaci o slici (ključ, timestamp, parking ID) prosljeđuju se sljedećem servisu
+    - Dohvaćena slike ostaje pohranjena u MinIO-u, a metapodaci o slici (ključ, timestamp, parking ID) prosljeđuju se sljedećem servisu (Kafka).
 3. **Prostorna normalizacija**
-    - Image Processor izdvaja relevantni dio slike (ROI) koji sadrži parkiralište te:
+    - Image Processor prima metapodatke iz Kafke, preuzima sliku iz S3 storage-a, izdvaja relevantni dio slike (ROI) koji sadrži parkiralište te:
         - sprema sigurnosnu kopiju originalne slike
+        - sprema "obrađenu" kopiju slike za potrebe dotreniranja modela
         - generira procesiranu verziju slike za inferenciju
 4. **YOLO inferencija**
     - Procesirana slika šalje se lokalnom YOLO serveru, koji koristi model dohvaćen iz MLflow registry-a za detekciju i prebrojavanje vozila
 5. **Spremanje rezultata**
-    - Rezultati inferencije (broj vozila po slici) zapisuje se u:
+    - Rezultati inferencije (broj vozila po slici) zapisuju se u:
         - Redis (trenutno stanje)
-        - ClickHouseDB (za kasniju bazch analizu)
+        - ClickHouseDB (za kasniju analizu) pomoću batch servisa
 6. **Batch obrada (periodički)**
     - Na tjednoj bazi izračunavaju se agregirane distribucije zauzeća parkirališta, koje se uspoređuju s prethodnim periodima radi detekcija anomalija
 
 ## 3. Image Fetcher - vremenski kontroliran ingestion
 
 ### 3.1. Uloga Image Fetcher-a u MLOps pipeline-u
-Image Fetcher je servis koji periodički (svaki puni sat) dohvaća sljedeću sliku iz MinIO/S3 bucket-a na temelju timestamp-a iz naziva ključa (S3 key). Odabranu slikku ne preuzima lokalno, već šalje metapodatke (key + parkin_lot_id) kroz Kafka topic prema sljedećoj komponenti pipeline-a (Image Processor). Osnovna ideja servisa je da, umjesto nasumičnog uzimanja slike kao prije, osigurava deterministički i reproducibilni redoslijed obrade
+Image Fetcher je servis koji periodički (svaki puni sat) dohvaća sljedeću sliku iz MinIO/S3 bucket-a na temelju timestamp-a iz naziva ključa (S3 key). Odabranu slikku ne preuzima lokalno, već šalje metapodatke (key + parking_lot_id) kroz Kafka topic prema sljedećoj komponenti pipeline-a (Image Processor). Osnovna ideja servisa je da, umjesto nasumičnog uzimanja slike kao prije, osigurava deterministički i reproducibilni redoslijed obrade.
 
 ### 3.2. Odgovornosti i granice servisa
 Image Fetcher izvodi sljedeće radnje:
-- Resolve-a `parkin_lot_id` iz MongoDB-a (prema imenu parkinga)
+- Resolve-a `parking_lot_id` iz MongoDB-a (prema imenu parkinga)
 - Lista objekte u MinIO bucket-u
 - Parsira timestamp iz naziva ključa (regex uz više različitih formata)
 - Bira sljedeći ključ (`ts > last_ts`)
@@ -222,7 +247,7 @@ if FETCH_INTERVAL_SECONDS > 0:
 ```
 
 ## 4. Image Processor - prostorna normalizacija input-a
-Image Processor je servis koji se nalazi između Image Fetcher-a i YOLO inferencijskog servisa. Njegova primarna uloga je prostorna normalizacija slika, odnosno izdvajanje samo onog dijela slike koji zaista sadreži parkiralište (ROI - *Region of interest*)
+Image Processor je servis koji se nalazi između Image Fetcher-a i YOLO inferencijskog servisa. Njegova primarna uloga je prostorna normalizacija slika, odnosno izdvajanje samo onog dijela slike koji zaista sadrži parkiralište (ROI - *Region of interest*).
 
 Time se smanjuje šum u ulaznim podacima, povećava konzistentnost inferencije i pojednostavljuje rad YOLO modela.
 
@@ -299,9 +324,7 @@ Nakon obrade, Image Processor sprema dvije verzije slike
 
 #### 1. Originalna slika (sigurnosna kopija)
 - Služi za:
-    - audit
-    - debugging
-    - naknadnu analizu
+    - sigurnosne potrebe (ako se na primjer snime ključni dokađaji na parkingu vlasnika)
 - Sprema se u poseban bucket
 ```python
 s3.put_object(
@@ -379,7 +402,7 @@ U ovoj fazi projekta poseban je naglasak stavljen na upravljanje dataset-om i te
 Cilj ovog projekta je pokazati da MLOps pipeline nije testiran samo na "idealnim" podacima, već i na namjerno narušenim scenarijima.
 
 ### 9.1. Kreiranje novog dataset-a
-- NOTE: molio bih te da ti ovdje malo raspišeš kako si scrape-ao podatke da ja ne bih pisao gluposti napamet
+- TODO: molio bih te da ti ovdje malo raspišeš kako si scrape-ao podatke da ja ne bih pisao gluposti napamet
 
 ### 9.2. Motivacija za uvođenje Bad Image Injector-a
 U realnim sustavima za nadzor parkirališta, ulazni podaci često odstupaju od očekivanog obrasca. Mogu se pojaviti:
