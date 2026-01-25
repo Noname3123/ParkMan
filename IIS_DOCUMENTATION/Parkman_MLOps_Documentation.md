@@ -367,18 +367,114 @@ Omjeri ROI-ja mogu se prilagoditi bez promjene koda.
 ## 5. YOLO Inference servis (lokalni server)
 
 ### 5.1. Razlozi za lokalni YOLO server
+Odluka da se YOLO inferencija implementira kao zaseban mikroservis (YOLO Server), umjesto da se ugradi izravno u Car Counter servis, donesena je iz nekoliko arhitektonskih razloga:
+- **Izolacija ovisnosti** - YOLO modeli i biblioteke za duboko učenje (PyTorch, Ultralytics) su "teške" i imaju specifične sistemske zahtjeve (npr. CUDA drivere). Odvajanjem u zaseban servis, Car Counter ostaje lagan i fokusiran na poslovnu logiku, dok se okruženje za inferenciju može optimizirati zasebno.
+- **Verzioniranje:** YOLO server je dizajniran da dinamički preuzima model s MLflow-a. To omogućuje promjenu modela (npr. ažuriranje na noviju verziju ili promjena arhitekture) promjenom konfiguracije u MLflow registry-ju, bez potrebe za ponovnim kompajliranjem ili redeployanjem Car Counter servisa.
 
 ### 5.2. API YOLO servera
+YOLO Server je implementiran koristeći **FastAPI** okvir te izlaže jednostavan REST API za komunikaciju.
+
+**Endpoint:** `POST /predict`
+
+Ovaj endpoint prihvaća sliku, provodi inferenciju koristeći učitani model i vraća broj detektiranih objekata ciljane klase.
+
+**Ulazni podaci:**
+- `file`: Slika u binarnom formatu (multipart/form-data).
+
+**Izlazni podaci (JSON):**
+```json
+{
+    "car_count": 15
+}
+```
+
+**Logika inferencije:**
+Prilikom pokretanja, servis se spaja na **MLflow Tracking Server** i preuzima artefakte modela definiranog varijablama okoline (`MLFLOW_MODEL_NAME` i `MLFLOW_MODEL_TAG`).
+```python
+# Učitavanje modela s MLflow-a
+model_uri = f"models:/{MODEL_NAME}@{MODEL_TAG}"
+model = mlflow.pytorch.load_model(model_uri)
+```
+Tijekom inferencije, rezultati se filtriraju kako bi se prebrojala samo vozila (klasa koja odgovara detektiranim automobilima u korištenom datasetu).
 
 ### 5.3. Integracija s Car Counter servisom
+Car Counter servis djeluje kao klijent YOLO servera. Komunikacija se odvija sinkrono putem HTTP protokola.
+
+Proces rada:
+1.  **Priprema:** Car Counter prima notifikaciju i dohvaća sliku iz S3 bucketa.
+2.  **Slanje zahtjeva:** Poziva se funkcija `yolo_remote_count` koja šalje sliku na adresu definiranu u `YOLO_ENDPOINT` varijabli (default: `http://yolo_server:8000/predict`).
+3.  **Obrada odgovora:** Servis čeka JSON odgovor s brojem vozila. U slučaju mrežne greške ili timeout-a, vraća se vrijednost `-1`, što signalizira grešku u detekciji.
+
+Ovakav dizajn omogućuje labavu povezanost između logike brojanja i same implementacije detekcije.
 
 ## 6. MLflow integracija
 
-### 7.1. Uloga MLflow-a u sustavu
+### 6.1. Uloga MLflow-a u sustavu
+MLflow je korišten kao centralna platforma za upravljanje cjelokupnim životnim ciklusom modela strojnog učenja u ParkMan sustavu. Njegova uloga je trostruka:
 
-### 7.2. Dohvat "najboljeg" modela
+1. Služi kao centralizirani repozitorij za praćenje eksperimenata. Tijekom faze treniranja, skripta `train_with_mlflow.py` automatski bilježi sve relevantne informacije za svako pokretanje:
+    *   **Parametre:** Hiperparametri kao što su broj epoha (`epochs`), veličina slike (`imgsz`), i tip modela (`MODEL_TYPE`).
+    *   **Metrike:** Pokazatelji performansi modela poput mAP-a (mean Average Precision) i vrijednosti funkcije gubitka (loss), koji se bilježe na kraju svake epohe.
+    *   **Artefakte:** Bilo koje datoteke generirane tijekom treniranja, uključujući težine modela (`best.pt`), vizualizacije (npr. `confusion_matrix.png`) i konfiguracijske datoteke (`data-visdrone.yaml`).
 
-### 7.3. Odvajanje treniranja i 
+2. Koristi se kao registar modela, odnosno centralno mjesto za verzioniranje i upravljanje modelima koji su spremni za produkciju. Svaki model registriran pod određenim imenom (npr. `YOLO_ParkMan_visdrone`) može imati više verzija. Verzije se kasnije označuju tagovima (npr. `production`), što omogućuje jasno razdvajanje modela u razvoju, testiranju i produkciji.
+
+3. Koristi se `mlflow.pytorch` modul za spremanje modela u formatu koji je lako učitati u drugim servisima. Kao pozadinska pohrana za sve artefakte (uključujući i same modele) koristi se **MinIO S3 storage**, što osigurava trajnost i skalabilnost.
+
+### 6.2. Dohvat produkcijskog modela
+Jedna od glavnih prednosti MLflow integracije je dinamičko dohvaćanje modela u **YOLO Inference servisu**. Servis nije statički povezan s određenom datotekom modela, već dohvaća verziju označenu za produkcijsku upotrebu izravno iz MLflow Model Registry-ja.
+
+Proces je sljedeći:
+1.  Prilikom pokretanja, YOLO server čita varijable okoline `MLFLOW_MODEL_NAME` i `MLFLOW_MODEL_TAG`.
+2.  Na temelju tih varijabli konstruira se jedinstveni URI za dohvat modela.
+3.  Pozivom `mlflow.pytorch.load_model` preuzimaju se artefakti modela s MinIO-a i učitava se model u memoriju.
+
+```python
+# YOLOServer/main.py
+
+# Configuration
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://mlflow_server:5000")
+MODEL_NAME = os.getenv("MLFLOW_MODEL_NAME", "YOLO_ParkMan_visdrone")
+MODEL_TAG = os.getenv("MLFLOW_MODEL_TAG", "best_stability")
+
+def load_model():
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+    # Construct the model URI for the registry (e.g., models:/YOLO_ParkMan_visdrone@best_stability)
+    model_uri = f"models:/{MODEL_NAME}@{MODEL_TAG}"
+    return mlflow.pytorch.load_model(model_uri)
+```
+
+Ovaj mehanizam omogućuje "hot-swap" modela u produkciji. Promocija nove, bolje verzije modela svodi se na promjenu taga (npr. premještanje taga `best_stability` s verzije 2 na verziju 3) unutar MLflow sučelja, bez potrebe za ponovnim pokretanjem ili izmjenom koda YOLO servisa.
+
+### 6.3. Odvajanje treniranja od inferencije
+Proces treniranja modela u potpunosti je odvojen od produkcijskog pipeline-a. Skripta `train_with_mlflow.py` izvršava se u zasebnom okruženju, ručno pokrenuta.
+
+Koraci u skripti za treniranje:
+1.  **Pokretanje MLflow run-a:** Svako treniranje se izvodi unutar `mlflow.start_run()` konteksta, čime se osigurava da su svi parametri i metrike vezani za jedinstveni ID pokretanja.
+2.  **Logiranje metrika i artefakata:** Tijekom i nakon treniranja, sve relevantne informacije se šalju na MLflow server.
+3.  **Registracija modela:** Nakon što je treniranje završeno i model evaluiran, najbolja verzija modela (`best.pt`) se registrira u MLflow Model Registry-ju.
+
+```python
+# YOLOModelTraining/train_with_mlflow.py
+
+# ... (nakon završetka treniranja)
+
+# 1. Log the model artifacts to a temporary path
+with tempfile.TemporaryDirectory() as tmp_dir:
+    local_model_path = os.path.join(tmp_dir, "model_build")
+    mlflow.pytorch.save_model(
+        pytorch_model=clean_YOLO_model(best_model),
+        path=local_model_path,
+        pip_requirements=["ultralytics"]
+    )
+    mlflow.log_artifacts(local_model_path, artifact_path="model")
+
+# 2. Register the model from the logged artifacts
+model_uri = f"runs:/{run.info.run_id}/model"
+reg_model = mlflow.register_model(model_uri, "YOLO_ParkMan_visdrone")
+```
+
+Ovo odvajanje omogućuje slobodno eksperimentiranje s različitim arhitekturama i hiperparametrima bez utjecaja na stabilnost produkcijskog sustava. Tek kada je nova verzija modela temeljito testirana i potvrđena, ona se pomoću taga označava te koristi u produkciji.
 
 ## 8. Batch processing i ClickHouseDB
 
@@ -387,6 +483,44 @@ Omjeri ROI-ja mogu se prilagoditi bez promjene koda.
 - trendovi zauzeća parkinga
 
 ### 8.2. Nova ClickHouse baza
+Za potrebe analitike i batch obrade podataka, uvedena je **ClickHouse** baza podataka. ClickHouse je odabrana zbog svojih performansi u analitičkim upitima nad velikim količinama podataka (OLAP).
+
+Za trenutnu fazu (prikazanu u ovom projektu), koriste se dvije ključne tablice unutar `parking_db` baze:
+
+#### 1. Tablica `parking_usage`
+Ova tablica služi kao "fact table" koja pohranjuje sirove podatke o zauzetosti parkinga kroz vrijeme. Podaci se u ovu tablicu dodaju iz Redisa putem ETL procesa svakih sat vremena.
+
+**Shema tablice:**
+- `timestamp` (DateTime): Vrijeme uzorkovanja podatka.
+- `owner_id` (String): ID vlasnika parkinga.
+- `owner_full_name` (String): Ime i prezime vlasnika.
+- `parking_lot_id` (String): Jedinstveni identifikator parkinga.
+- `parking_lot_name` (String): Naziv parkinga.
+- `parking_spot_number` (Int32): Ukupan kapacitet parkinga.
+- `car_count` (Int32): Broj detektiranih vozila.
+
+**Optimizacija:**
+Tablica koristi `MergeTree` engine.
+- **Particioniranje:** `(owner_id, toYYYYMM(timestamp))` - omogućuje efikasno upravljanje podacima po vlasnicima i mjesecima.
+- **Sortiranje:** `(owner_id, parking_lot_id, timestamp)` - optimizira upite koji filtriraju po vlasniku i parkingu te dohvaćaju vremenske serije.
+
+#### 2. Tablica `parking_usage_baseline`
+Ova tablica pohranjuje izračunate tjedne distribucije (baseline) zauzetosti za svaki parking. Koristi se za detekciju anomalija usporedbom trenutnog stanja s povijesnim prosjekom.
+
+**Shema tablice:**
+- `baseline_id` (String): Jedinstveni ID tjednog izračuna.
+- `calculation_date` (Date): Datum kada je prosjek izračunat.
+- `parking_lot_id` (String): Referenca na parking.
+- `hour_of_day` (UInt8): Sat u danu (0-23) za koji vrijedi statistika.
+- `avg_car_count` (Float64): Prosječan broj vozila (aritmetička sredina).
+- `std_dev_car_count` (Float64): Standardna devijacija (koristi se za Z-score).
+- `max_observed_cars` (Int32): Maksimalni zabilježeni broj vozila (za planiranje kapaciteta).
+- `sample_count` (Int32): Broj uzoraka korištenih za izračun.
+- `is_active` (UInt8): Zastavica koja označava je li ovo trenutno važeći baseline.
+
+**Optimizacija:**
+Tablica koristi `ReplacingMergeTree` engine, što omogućuje ažuriranje zapisa (npr. deaktivaciju starih baseline-ova) zamjenom redaka s istim ključem sortiranja.
+- **Sortiranje:** `(parking_lot_id, hour_of_day, calculation_date)`.
 
 ### 8.3. Tjedna average distribucija
 - dohvat stare distribucije
@@ -402,7 +536,21 @@ U ovoj fazi projekta poseban je naglasak stavljen na upravljanje dataset-om i te
 Cilj ovog projekta je pokazati da MLOps pipeline nije testiran samo na "idealnim" podacima, već i na namjerno narušenim scenarijima.
 
 ### 9.1. Kreiranje novog dataset-a
-- TODO: molio bih te da ti ovdje malo raspišeš kako si scrape-ao podatke da ja ne bih pisao gluposti napamet
+Za potrebe treniranja i testiranja modela, kao i za simulaciju rada sustava u realnom vremenu, bilo je potrebno prikupiti vlastiti skup podataka. Taj dataset sadrži sekvencijalne slike parkinga u Rumunjskoj, preuzete tijekom razdoblja od 2 tjedna, gdje su se slike prikupljale svakih sat vremena. Dodatno je prikupljeno i tjedan dana slika iz parkinga u Milanu. Te slike su označene te su one činile jednu varijantu skupa podataka nad kojim se trenirao YOLO model. Slike iz grada u Rumunjskoj su se zatim koristile kao sekvencijalni niz slika za jedan konkretan parking u ParkMan sustavu. Time se omogućilo smisleno računanje distribucije parkinga kroz vrijeme. Slike iz Milana su se zatim koristile kao "loše" slike koje se injektirale u dataset kako bi pokvarile distribuciju tijekom testiranja sustava za uvid u anomalije.
+
+Proces prikupljanja podataka automatiziran je pomoću Python skripti (izvršavanih unutar Jupyter Notebook okruženja) koje periodički dohvaćaju slike s javno dostupnih IP kamera.
+
+**Izvori podataka:**
+Korištene su javne kamere koje prikazuju parkirališta u različitim gradovima (Milano, lokacija u Rumunjskoj). Odabir kamera vršen je na temelju lakoće pristupa streamu i jasnog pogleda na parkirna mjesta.
+
+**Tehnička implementacija:**
+Skripta za prikupljanje podataka (`periodic_image_save.ipynb`) funkcionira na sljedeći način:
+1.  **Povezivanje na stream:** Skripta šalje HTTP GET zahtjev na URL kamere. Budući te kamere koriste MJPEG (Motion JPEG) stream, skripta ne preuzima samo jednu statičnu sliku, već otvara stream i čita podatke u blokovima (`chunks`).
+2.  **Parsiranje frame-ova:** Unutar binarnog toka podataka, skripta traži početne (`0xFFD8`) i završne (`0xFFD9`) bajtove koji označavaju JPEG sliku. Na taj način se iz kontinuiranog video streama izdvaja jedan validan frame.
+3.  **Spremanje i imenovanje:** Izdvojena slika sprema se lokalno u definiranu mapu (`parking_spot_images`). Datoteke se imenuju uz precizan vremenski žig (npr. `parking_spot_2025-01-15_14-30-00.jpg`). Ovo je kasnije ključno za simulaciju "vremenskog protoka" u Image Fetcher servisu.
+4.  **Periodičko izvršavanje:** Skripta je konfigurirana da ponavlja ovaj proces u zadanim intervalima (svakih sat vremena), sve dok se ne prikupi željena količina podataka (definirana varijablom `COLLECTING_HOUR_LENGTH`).
+
+Ovaj pristup omogućio je stvaranje dataset-a koji je konzistentan za jedan konkretan parking u ParkMan sustavu.
 
 ### 9.2. Motivacija za uvođenje Bad Image Injector-a
 U realnim sustavima za nadzor parkirališta, ulazni podaci često odstupaju od očekivanog obrasca. Mogu se pojaviti:
@@ -598,4 +746,3 @@ Uvođenje Image Processora i Bad Image Injecotr-a omogućilo je stabilniji rad m
 Iako sustav ima svjesno prihvaćena ograničenja, ona proizlaze iz eksperimentalne prirode projekta te predstavljaju jasne smjernice za budući razvoj.
 
 Ova faza projekta pokazuje kako se računalni vid može integrirati u širi MLOps kontekst, prelazeći s izolirane model-inferencije prema cjelovitom, skalabilnom i proširivom sustavu
-
