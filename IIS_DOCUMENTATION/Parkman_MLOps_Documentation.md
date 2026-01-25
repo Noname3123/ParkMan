@@ -10,11 +10,27 @@
 
 ## 1. Uvod
 
-### 1.1. Svrha dokumenta
+### 1.1 ParkMan sustav
+ParkMan je aplikacija koja se sastoji od tri dijela: web aplikacije za 
+upravitelje parkiranja, mobilne aplikacije za korisnike i API-ja za senzore. 
+
+Cilj je bio 
+stvoriti aplikaciju koja će:
+
+- Omogućiti upraviteljima parkiranja kreiranje novih parkirnih mjesta unutar 
+pripadajućih parkirališta
+- Omogućiti korisnicima kreiranje računa, traženje slobodnih parkirnih mjesta, kao i 
+rezervaciju i plaćanje korištenih mjesta
+- Koristiti računalni vid za određivanje količine slobodnih mjesta temeljem 
+zauzetosti parkingih mjesta
+
+
+
+### 1.2. Svrha dokumenta
 
 U ovom dokumentu se prikazuje tehnička dokumentacija nadogradnje sustava Parkman.
 
-### 1.2. Nadogradnja
+### 1.3. Nadogradnja
 
 U ovoj nadogradnji sustava ParkMan, cilj je bio proširiti postojeće funkcionalnosti sustava dodavanjem:
 - sustava za verzioniranje modela (MLFlow), što olakšava postupak praćenja eksperimenata i postavljanje modela računalnog vida.
@@ -476,6 +492,29 @@ reg_model = mlflow.register_model(model_uri, "YOLO_ParkMan_visdrone")
 
 Ovo odvajanje omogućuje slobodno eksperimentiranje s različitim arhitekturama i hiperparametrima bez utjecaja na stabilnost produkcijskog sustava. Tek kada je nova verzija modela temeljito testirana i potvrđena, ona se pomoću taga označava te koristi u produkciji.
 
+## 7. YOLO model
+
+Za potrebe YOLO Servera se treniralo više kombinacija YOLO modela. Koristili su se YOLO11m i YOLO11s modeli.
+
+Prilikom treniranja, koristilo se više različitih kombinacija datasetova:
+
+- visdrone dataset:
+    - prilagođeni visdrone dataset na kojem se detektiraju samo vozila
+- visdrone + pklot dataset:
+    - dataset koji koristi kombinaciju pklot (dataset za detekciju praznih i zauzetih mjesta temeljem parking kamera) i pklot dataseta, prilakođen za detekcju vozila
+- romania dataset:
+    - vlastiti, ručno napravljen dataset
+
+Trenirano je ukupno 6 YOLO modela te je provedena usporedba točnosti modela nad odgovarajućim test dijelovima dataseta (svaki dataset je imao svoj testni skup, što znači da se rezultati ne mogu usporediti).
+
+Naposlijetku je za produkciju izabran YOLO11 small model koji je pretreniran nad skupom podataka Rumunjske. To je osiguralo izrazito visoku preciznost modela (slike koje Image Fetcher dohvaća su one nad kojima je model trenirao) sa svrhom bolje demonstracije rada sustava za detekciju anomalija.
+
+Metrike tog modela su prikazane ispod:
+
+
+
+
+
 ## 8. Batch processing i ClickHouseDB
 
 ### 8.1. Razlozi za batch obradu
@@ -717,6 +756,8 @@ Popis ograničenja i poznatih trade-off-ova:
 - YOLO inferencija se izvodi putem lokalnog inference servera, bez horizontalnog skaliranja. Ovaj pristup smanjuje latenciju i olakšava debugiranje, ali nije prilagođen visoko-opterećenim produkcijskim scenarijima.
 - Batch analiza se izvodi periodično, s fokusom na agregirane metrike poput tjednih distribucija zauzeća. Sustav ne reagira u realnom vremenu na anomalije.
 - Bad Image Injector koristi ručno definirane anomalije i ne generira kompleksne sintetičke poremećaje. Injektiranje slike ostaju u dataset-u i zahtijevaju ručno uklanjanje ako više nisu potrebne.
+- Nisu napravljene mjerljive usporedbe između performansi različitih treniranih YOLO modela, odnosno YOLO modeli su trenirani na tri različita dataseta sa tri različita test skupa. Ta treniranja su bila korištena samo za demonstracijske svrhe.
+- Model koji se koristi u sustavu je pretreniran nad datasetom Rumunjske kako bi se lakše demonstrirao sustav detekcije anomalija.
 
 Sva navedena ograničenja predstavljaju svjesne dizajnerske odluke prilagođene eksperimentalnoj prirodi projekta te služe kao jasna polazišta za budući razvoj sustava.
 
