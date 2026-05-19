@@ -1,1 +1,411 @@
-{"cells":[{"cell_type":"markdown","metadata":{"id":"td1z41w7Fuzj"},"source":["Setup code"]},{"cell_type":"code","execution_count":1,"metadata":{"colab":{"base_uri":"https://localhost:8080/"},"executionInfo":{"elapsed":108116,"status":"ok","timestamp":1749137277346,"user":{"displayName":"Benjamin Jakupović","userId":"08727916533715213499"},"user_tz":-120},"id":"qSaHN7KsEaB-","outputId":"891220d1-43f4-489d-c0c4-90d9f11ef638"},"outputs":[{"output_type":"stream","name":"stdout","text":["\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m1.0/1.0 MB\u001b[0m \u001b[31m19.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m363.4/363.4 MB\u001b[0m \u001b[31m4.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m13.8/13.8 MB\u001b[0m \u001b[31m37.4 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m24.6/24.6 MB\u001b[0m \u001b[31m24.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m883.7/883.7 kB\u001b[0m \u001b[31m31.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m664.8/664.8 MB\u001b[0m \u001b[31m2.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m211.5/211.5 MB\u001b[0m \u001b[31m5.9 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m56.3/56.3 MB\u001b[0m \u001b[31m12.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m127.9/127.9 MB\u001b[0m \u001b[31m7.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m207.5/207.5 MB\u001b[0m \u001b[31m5.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m21.1/21.1 MB\u001b[0m \u001b[31m95.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n","\u001b[?25h"]}],"source":["# prompt: Setup code for Yolo v11\n","# Installs PyTorch with CUDA 11.3 support\n","!pip install -q ultralytics gdown"]},{"cell_type":"markdown","metadata":{"id":"XV_JQPjFL5Yz"},"source":["Inferrence code"]},{"cell_type":"code","execution_count":2,"metadata":{"colab":{"base_uri":"https://localhost:8080/"},"executionInfo":{"elapsed":14478,"status":"ok","timestamp":1749137291817,"user":{"displayName":"Benjamin Jakupović","userId":"08727916533715213499"},"user_tz":-120},"id":"nnvOM4VgIfXL","outputId":"f1fa5647-1a2f-4803-dc34-e3dfa5395301"},"outputs":[{"output_type":"stream","name":"stdout","text":["Creating new Ultralytics Settings v0.0.6 file ✅ \n","View Ultralytics Settings with 'yolo settings' or at '/root/.config/Ultralytics/settings.json'\n","Update Settings with 'yolo settings key=value', i.e. 'yolo settings runs_dir=path/to/dir'. For help see https://docs.ultralytics.com/quickstart/#ultralytics-settings.\n"]},{"output_type":"stream","name":"stderr","text":["Downloading...\n","From (original): https://drive.google.com/uc?id=1p1xAfbgcQoMWaLc_Rg13lqAQs8c8O1US\n","From (redirected): https://drive.google.com/uc?id=1p1xAfbgcQoMWaLc_Rg13lqAQs8c8O1US&confirm=t&uuid=ea46b7d8-4b34-464e-bc61-531fea2858e7\n","To: /content/yolo11m_parkman_weights.pt\n","100%|██████████| 51.2M/51.2M [00:00<00:00, 85.0MB/s]\n"]}],"source":["from ultralytics import YOLO\n","from PIL import Image\n","import gdown\n","\n","#load model\n","\n","#download trained model\n","\n","# Original Google Drive URL\n","file_id = \"1p1xAfbgcQoMWaLc_Rg13lqAQs8c8O1US\"\n","model_path=\"yolo11m_parkman_weights.pt\"\n","\n","gdown.download(f'https://drive.google.com/uc?id={file_id}', output=model_path, quiet=False)\n","\n","\n","\n","model=YOLO(\"/content/\"+model_path) #obb varijanta navodno bolje radi za slike gdje su objekti udaljeni i pod kutom\n","\n","\n","# Download an example image\n","#image_url = \"https://ultralytics.com/images/bus.jpg\"\n","#image_path = \"example_image.jpg\"\n","#urllib.request.urlretrieve(image_url, image_path)\n","\n","\n","# Perform inference\n","#results = model(\"example_image.jpg\")\n","\n","# EXAMPLE: Print the count of objects for the target class\n","#print(f\"Number of detected 'car' objects: {get_target_class_count(results, 'car')}\")\n"]},{"cell_type":"markdown","metadata":{"id":"D2iyhc1MMQ4V"},"source":["Serve the model so that it can be accessed from outside"]},{"cell_type":"code","execution_count":null,"metadata":{"colab":{"background_save":true,"base_uri":"https://localhost:8080/"},"id":"xfe95VOBL9uq","outputId":"17e98cfa-c3ad-43c1-f7b1-b57c2c9fc3be"},"outputs":[{"output_type":"stream","name":"stdout","text":["Requirement already satisfied: fastapi in /usr/local/lib/python3.11/dist-packages (0.115.12)\n","Requirement already satisfied: nest_asyncio in /usr/local/lib/python3.11/dist-packages (1.6.0)\n","Collecting pyngrok\n","  Downloading pyngrok-7.2.9-py3-none-any.whl.metadata (9.3 kB)\n","Requirement already satisfied: uvicorn in /usr/local/lib/python3.11/dist-packages (0.34.2)\n","Requirement already satisfied: python-multipart in /usr/local/lib/python3.11/dist-packages (0.0.20)\n","Requirement already satisfied: starlette<0.47.0,>=0.40.0 in /usr/local/lib/python3.11/dist-packages (from fastapi) (0.46.2)\n","Requirement already satisfied: pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4 in /usr/local/lib/python3.11/dist-packages (from fastapi) (2.11.5)\n","Requirement already satisfied: typing-extensions>=4.8.0 in /usr/local/lib/python3.11/dist-packages (from fastapi) (4.13.2)\n","Requirement already satisfied: PyYAML>=5.1 in /usr/local/lib/python3.11/dist-packages (from pyngrok) (6.0.2)\n","Requirement already satisfied: click>=7.0 in /usr/local/lib/python3.11/dist-packages (from uvicorn) (8.2.1)\n","Requirement already satisfied: h11>=0.8 in /usr/local/lib/python3.11/dist-packages (from uvicorn) (0.16.0)\n","Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.11/dist-packages (from pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4->fastapi) (0.7.0)\n","Requirement already satisfied: pydantic-core==2.33.2 in /usr/local/lib/python3.11/dist-packages (from pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4->fastapi) (2.33.2)\n","Requirement already satisfied: typing-inspection>=0.4.0 in /usr/local/lib/python3.11/dist-packages (from pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4->fastapi) (0.4.1)\n","Requirement already satisfied: anyio<5,>=3.6.2 in /usr/local/lib/python3.11/dist-packages (from starlette<0.47.0,>=0.40.0->fastapi) (4.9.0)\n","Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.11/dist-packages (from anyio<5,>=3.6.2->starlette<0.47.0,>=0.40.0->fastapi) (3.10)\n","Requirement already satisfied: sniffio>=1.1 in /usr/local/lib/python3.11/dist-packages (from anyio<5,>=3.6.2->starlette<0.47.0,>=0.40.0->fastapi) (1.3.1)\n","Downloading pyngrok-7.2.9-py3-none-any.whl (25 kB)\n","Installing collected packages: pyngrok\n","Successfully installed pyngrok-7.2.9\n","Starting ngrok tunnel...\n","FastAPI app exposed at: https://nationally-cheerful-pegasus.ngrok-free.app\n"]},{"output_type":"stream","name":"stderr","text":["INFO:     Started server process [219]\n","INFO:     Waiting for application startup.\n","INFO:     Application startup complete.\n","INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)\n"]},{"output_type":"stream","name":"stdout","text":["\n","0: 384x640 3 space-emptys, 25 space-occupieds, 65.0ms\n","Speed: 27.4ms preprocess, 65.0ms inference, 386.1ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 61 space-emptys, 39 space-occupieds, 34.0ms\n","Speed: 2.4ms preprocess, 34.0ms inference, 2.6ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 58 space-emptys, 42 space-occupieds, 31.0ms\n","Speed: 2.0ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 3 space-emptys, 25 space-occupieds, 31.0ms\n","Speed: 2.0ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 87 space-emptys, 8 space-occupieds, 39.8ms\n","Speed: 2.0ms preprocess, 39.8ms inference, 1.8ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 89 space-emptys, 11 space-occupieds, 31.0ms\n","Speed: 1.9ms preprocess, 31.0ms inference, 2.5ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 58 space-emptys, 42 space-occupieds, 31.0ms\n","Speed: 2.0ms preprocess, 31.0ms inference, 1.8ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 100 space-emptys, 31.0ms\n","Speed: 2.0ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 28 space-emptys, 31.1ms\n","Speed: 2.3ms preprocess, 31.1ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 3 space-emptys, 37 space-occupieds, 30.9ms\n","Speed: 2.0ms preprocess, 30.9ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 97 space-emptys, 3 space-occupieds, 31.0ms\n","Speed: 1.8ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 30 space-emptys, 70 space-occupieds, 31.0ms\n","Speed: 2.0ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 21 space-emptys, 79 space-occupieds, 34.2ms\n","Speed: 3.6ms preprocess, 34.2ms inference, 2.7ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 45 space-occupieds, 31.1ms\n","Speed: 2.2ms preprocess, 31.1ms inference, 1.9ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 100 space-emptys, 31.0ms\n","Speed: 2.3ms preprocess, 31.0ms inference, 1.8ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 86 space-emptys, 14 space-occupieds, 37.5ms\n","Speed: 2.5ms preprocess, 37.5ms inference, 2.1ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 (no detections), 31.1ms\n","Speed: 2.0ms preprocess, 31.1ms inference, 0.8ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 53 space-emptys, 47 space-occupieds, 30.9ms\n","Speed: 2.0ms preprocess, 30.9ms inference, 1.8ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 31 space-emptys, 69 space-occupieds, 31.0ms\n","Speed: 2.2ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 71 space-emptys, 29 space-occupieds, 30.9ms\n","Speed: 1.9ms preprocess, 30.9ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 56 space-emptys, 44 space-occupieds, 31.0ms\n","Speed: 1.9ms preprocess, 31.0ms inference, 1.6ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n","\n","0: 384x640 39 space-emptys, 61 space-occupieds, 31.0ms\n","Speed: 1.9ms preprocess, 31.0ms inference, 2.4ms postprocess per image at shape (1, 3, 384, 640)\n","INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n"]}],"source":["# prompt:  expose web server (fast API), serving YOLO model from cell above. The model counts cars with get_target_class_count and returns the number of cars\n","\n","!pip install fastapi nest_asyncio pyngrok uvicorn python-multipart\n","\n","from fastapi import FastAPI, UploadFile, File\n","import uvicorn\n","import nest_asyncio\n","from pyngrok import ngrok\n","import numpy as np\n","from PIL import Image\n","import io\n","\n","app = FastAPI()\n","\n","#import model here\n","\n","\n","###\n","\n","\n","\n","# This function counts the number of detected objects of a specific class\n","# within the results of a YOLO inference.\n","def get_target_class_count(results, target_class_name):\n","\n","\n","    # counter for the target class\n","    target_class_count = 0\n","\n","    # Iterate through the detected objects in the results\n","    for box in results[0].boxes:\n","        # Access the class ID for the current detection\n","        class_id = int(box.cls[0])\n","\n","        # Access the class name from the model's class names list\n","        # model.names is a dictionary mapping class IDs to class names\n","        detected_class_name = model.names[class_id]\n","\n","        # Check if the detected class name matches the target class name\n","        if detected_class_name == target_class_name:\n","            target_class_count += 1\n","\n","    return target_class_count\n","\n","@app.post(\"/count_cars/\")\n","async def count_cars_endpoint(file: UploadFile = File(...)):\n","    \"\"\"\n","    Receives an image file, performs YOLO inference to count cars,\n","    and returns the number of detected cars.\n","    \"\"\"\n","    try:\n","      # Read the image file\n","      image_data = await file.read()\n","      image = Image.open(io.BytesIO(image_data))\n","\n","      # Perform inference on the uploaded image\n","      # model is loaded in the setup code\n","      results = model(image)\n","\n","      # Get the count of cars (occupied spaces)\n","      car_count = get_target_class_count(results, 'space-occupied')\n","\n","      return {\"car_count\": car_count}\n","    except Exception as e:\n","      return {\"error\": str(e)}\n","\n","\n","# Start the FastAPI server using ngrok for external access\n","nest_asyncio.apply()\n","print(\"Starting ngrok tunnel...\")\n","# Make sure you have ngrok installed and authenticated if needed\n","# You might need to replace '8000' if you change the uvicorn port\n","ngrok.set_auth_token(\"2x5Bjf7OR7irupNKsyljUSnWRvg_7tnVHCKDSR53KULLPwtu1\")\n","static_domain='nationally-cheerful-pegasus.ngrok-free.app'\n","public_url = ngrok.connect(8000, domain=static_domain).public_url\n","print(f\"FastAPI app exposed at: {public_url}\")\n","\n","# Run the uvicorn server\n","uvicorn.run(app, host=\"0.0.0.0\", port=8000)\n","\n","# Keep the cell running to maintain the server and ngrok tunnel\n","# You can stop the cell execution to stop the server and tunnel\n","# ngrok.kill() # Use this in another cell if you need to kill the tunnel manually\n"]},{"cell_type":"code","execution_count":null,"metadata":{"id":"WUsFZN4f9Zah"},"outputs":[],"source":["print(app.routes)"]}],"metadata":{"accelerator":"GPU","colab":{"gpuType":"T4","provenance":[]},"kernelspec":{"display_name":"Python 3","name":"python3"},"language_info":{"name":"python"}},"nbformat":4,"nbformat_minor":0}
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "td1z41w7Fuzj"
+   },
+   "source": [
+    "Setup code"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "executionInfo": {
+     "elapsed": 108116,
+     "status": "ok",
+     "timestamp": 1749137277346,
+     "user": {
+      "displayName": "Benjamin Jakupović",
+      "userId": "08727916533715213499"
+     },
+     "user_tz": -120
+    },
+    "id": "qSaHN7KsEaB-",
+    "outputId": "891220d1-43f4-489d-c0c4-90d9f11ef638"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m1.0/1.0 MB\u001b[0m \u001b[31m19.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m363.4/363.4 MB\u001b[0m \u001b[31m4.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m13.8/13.8 MB\u001b[0m \u001b[31m37.4 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m24.6/24.6 MB\u001b[0m \u001b[31m24.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m883.7/883.7 kB\u001b[0m \u001b[31m31.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m664.8/664.8 MB\u001b[0m \u001b[31m2.7 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m211.5/211.5 MB\u001b[0m \u001b[31m5.9 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m56.3/56.3 MB\u001b[0m \u001b[31m12.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m127.9/127.9 MB\u001b[0m \u001b[31m7.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m207.5/207.5 MB\u001b[0m \u001b[31m5.6 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m21.1/21.1 MB\u001b[0m \u001b[31m95.1 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+      "\u001b[?25h"
+     ]
+    }
+   ],
+   "source": [
+    "# prompt: Setup code for Yolo v11\n",
+    "# Installs PyTorch with CUDA 11.3 support\n",
+    "!pip install -q ultralytics gdown"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "XV_JQPjFL5Yz"
+   },
+   "source": [
+    "Inferrence code"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "colab": {
+     "base_uri": "https://localhost:8080/"
+    },
+    "executionInfo": {
+     "elapsed": 14478,
+     "status": "ok",
+     "timestamp": 1749137291817,
+     "user": {
+      "displayName": "Benjamin Jakupović",
+      "userId": "08727916533715213499"
+     },
+     "user_tz": -120
+    },
+    "id": "nnvOM4VgIfXL",
+    "outputId": "f1fa5647-1a2f-4803-dc34-e3dfa5395301"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Creating new Ultralytics Settings v0.0.6 file ✅ \n",
+      "View Ultralytics Settings with 'yolo settings' or at '/root/.config/Ultralytics/settings.json'\n",
+      "Update Settings with 'yolo settings key=value', i.e. 'yolo settings runs_dir=path/to/dir'. For help see https://docs.ultralytics.com/quickstart/#ultralytics-settings.\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Downloading...\n",
+      "From (original): https://drive.google.com/uc?id=1p1xAfbgcQoMWaLc_Rg13lqAQs8c8O1US\n",
+      "From (redirected): https://drive.google.com/uc?id=1p1xAfbgcQoMWaLc_Rg13lqAQs8c8O1US&confirm=t&uuid=ea46b7d8-4b34-464e-bc61-531fea2858e7\n",
+      "To: /content/yolo11m_parkman_weights.pt\n",
+      "100%|██████████| 51.2M/51.2M [00:00<00:00, 85.0MB/s]\n"
+     ]
+    }
+   ],
+   "source": [
+    "from ultralytics import YOLO\n",
+    "from PIL import Image\n",
+    "import gdown\n",
+    "\n",
+    "#load model\n",
+    "\n",
+    "#download trained model\n",
+    "\n",
+    "# Original Google Drive URL\n",
+    "file_id = \"1p1xAfbgcQoMWaLc_Rg13lqAQs8c8O1US\"\n",
+    "model_path=\"yolo11m_parkman_weights.pt\"\n",
+    "\n",
+    "gdown.download(f'https://drive.google.com/uc?id={file_id}', output=model_path, quiet=False)\n",
+    "\n",
+    "\n",
+    "\n",
+    "model=YOLO(\"/content/\"+model_path) #obb varijanta navodno bolje radi za slike gdje su objekti udaljeni i pod kutom\n",
+    "\n",
+    "\n",
+    "# Download an example image\n",
+    "#image_url = \"https://ultralytics.com/images/bus.jpg\"\n",
+    "#image_path = \"example_image.jpg\"\n",
+    "#urllib.request.urlretrieve(image_url, image_path)\n",
+    "\n",
+    "\n",
+    "# Perform inference\n",
+    "#results = model(\"example_image.jpg\")\n",
+    "\n",
+    "# EXAMPLE: Print the count of objects for the target class\n",
+    "#print(f\"Number of detected 'car' objects: {get_target_class_count(results, 'car')}\")\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "D2iyhc1MMQ4V"
+   },
+   "source": [
+    "Serve the model so that it can be accessed from outside"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "colab": {
+     "background_save": true,
+     "base_uri": "https://localhost:8080/"
+    },
+    "id": "xfe95VOBL9uq",
+    "outputId": "17e98cfa-c3ad-43c1-f7b1-b57c2c9fc3be"
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Requirement already satisfied: fastapi in /usr/local/lib/python3.11/dist-packages (0.115.12)\n",
+      "Requirement already satisfied: nest_asyncio in /usr/local/lib/python3.11/dist-packages (1.6.0)\n",
+      "Collecting pyngrok\n",
+      "  Downloading pyngrok-7.2.9-py3-none-any.whl.metadata (9.3 kB)\n",
+      "Requirement already satisfied: uvicorn in /usr/local/lib/python3.11/dist-packages (0.34.2)\n",
+      "Requirement already satisfied: python-multipart in /usr/local/lib/python3.11/dist-packages (0.0.20)\n",
+      "Requirement already satisfied: starlette<0.47.0,>=0.40.0 in /usr/local/lib/python3.11/dist-packages (from fastapi) (0.46.2)\n",
+      "Requirement already satisfied: pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4 in /usr/local/lib/python3.11/dist-packages (from fastapi) (2.11.5)\n",
+      "Requirement already satisfied: typing-extensions>=4.8.0 in /usr/local/lib/python3.11/dist-packages (from fastapi) (4.13.2)\n",
+      "Requirement already satisfied: PyYAML>=5.1 in /usr/local/lib/python3.11/dist-packages (from pyngrok) (6.0.2)\n",
+      "Requirement already satisfied: click>=7.0 in /usr/local/lib/python3.11/dist-packages (from uvicorn) (8.2.1)\n",
+      "Requirement already satisfied: h11>=0.8 in /usr/local/lib/python3.11/dist-packages (from uvicorn) (0.16.0)\n",
+      "Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.11/dist-packages (from pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4->fastapi) (0.7.0)\n",
+      "Requirement already satisfied: pydantic-core==2.33.2 in /usr/local/lib/python3.11/dist-packages (from pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4->fastapi) (2.33.2)\n",
+      "Requirement already satisfied: typing-inspection>=0.4.0 in /usr/local/lib/python3.11/dist-packages (from pydantic!=1.8,!=1.8.1,!=2.0.0,!=2.0.1,!=2.1.0,<3.0.0,>=1.7.4->fastapi) (0.4.1)\n",
+      "Requirement already satisfied: anyio<5,>=3.6.2 in /usr/local/lib/python3.11/dist-packages (from starlette<0.47.0,>=0.40.0->fastapi) (4.9.0)\n",
+      "Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.11/dist-packages (from anyio<5,>=3.6.2->starlette<0.47.0,>=0.40.0->fastapi) (3.10)\n",
+      "Requirement already satisfied: sniffio>=1.1 in /usr/local/lib/python3.11/dist-packages (from anyio<5,>=3.6.2->starlette<0.47.0,>=0.40.0->fastapi) (1.3.1)\n",
+      "Downloading pyngrok-7.2.9-py3-none-any.whl (25 kB)\n",
+      "Installing collected packages: pyngrok\n",
+      "Successfully installed pyngrok-7.2.9\n",
+      "Starting ngrok tunnel...\n",
+      "FastAPI app exposed at: https://nationally-cheerful-pegasus.ngrok-free.app\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "INFO:     Started server process [219]\n",
+      "INFO:     Waiting for application startup.\n",
+      "INFO:     Application startup complete.\n",
+      "INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "\n",
+      "0: 384x640 3 space-emptys, 25 space-occupieds, 65.0ms\n",
+      "Speed: 27.4ms preprocess, 65.0ms inference, 386.1ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 61 space-emptys, 39 space-occupieds, 34.0ms\n",
+      "Speed: 2.4ms preprocess, 34.0ms inference, 2.6ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 58 space-emptys, 42 space-occupieds, 31.0ms\n",
+      "Speed: 2.0ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 3 space-emptys, 25 space-occupieds, 31.0ms\n",
+      "Speed: 2.0ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 87 space-emptys, 8 space-occupieds, 39.8ms\n",
+      "Speed: 2.0ms preprocess, 39.8ms inference, 1.8ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 89 space-emptys, 11 space-occupieds, 31.0ms\n",
+      "Speed: 1.9ms preprocess, 31.0ms inference, 2.5ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 58 space-emptys, 42 space-occupieds, 31.0ms\n",
+      "Speed: 2.0ms preprocess, 31.0ms inference, 1.8ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 100 space-emptys, 31.0ms\n",
+      "Speed: 2.0ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 28 space-emptys, 31.1ms\n",
+      "Speed: 2.3ms preprocess, 31.1ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 3 space-emptys, 37 space-occupieds, 30.9ms\n",
+      "Speed: 2.0ms preprocess, 30.9ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 97 space-emptys, 3 space-occupieds, 31.0ms\n",
+      "Speed: 1.8ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 30 space-emptys, 70 space-occupieds, 31.0ms\n",
+      "Speed: 2.0ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 21 space-emptys, 79 space-occupieds, 34.2ms\n",
+      "Speed: 3.6ms preprocess, 34.2ms inference, 2.7ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 45 space-occupieds, 31.1ms\n",
+      "Speed: 2.2ms preprocess, 31.1ms inference, 1.9ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 100 space-emptys, 31.0ms\n",
+      "Speed: 2.3ms preprocess, 31.0ms inference, 1.8ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 86 space-emptys, 14 space-occupieds, 37.5ms\n",
+      "Speed: 2.5ms preprocess, 37.5ms inference, 2.1ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 (no detections), 31.1ms\n",
+      "Speed: 2.0ms preprocess, 31.1ms inference, 0.8ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 53 space-emptys, 47 space-occupieds, 30.9ms\n",
+      "Speed: 2.0ms preprocess, 30.9ms inference, 1.8ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 31 space-emptys, 69 space-occupieds, 31.0ms\n",
+      "Speed: 2.2ms preprocess, 31.0ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 71 space-emptys, 29 space-occupieds, 30.9ms\n",
+      "Speed: 1.9ms preprocess, 30.9ms inference, 1.7ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 56 space-emptys, 44 space-occupieds, 31.0ms\n",
+      "Speed: 1.9ms preprocess, 31.0ms inference, 1.6ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n",
+      "\n",
+      "0: 384x640 39 space-emptys, 61 space-occupieds, 31.0ms\n",
+      "Speed: 1.9ms preprocess, 31.0ms inference, 2.4ms postprocess per image at shape (1, 3, 384, 640)\n",
+      "INFO:     93.138.80.237:0 - \"POST /count_cars/ HTTP/1.1\" 200 OK\n"
+     ]
+    }
+   ],
+   "source": [
+    "# prompt:  expose web server (fast API), serving YOLO model from cell above. The model counts cars with get_target_class_count and returns the number of cars\n",
+    "\n",
+    "!pip install fastapi nest_asyncio pyngrok uvicorn python-multipart\n",
+    "\n",
+    "from fastapi import FastAPI, UploadFile, File\n",
+    "import uvicorn\n",
+    "import nest_asyncio\n",
+    "from pyngrok import ngrok\n",
+    "import numpy as np\n",
+    "from PIL import Image\n",
+    "import io\n",
+    "\n",
+    "app = FastAPI()\n",
+    "\n",
+    "#import model here\n",
+    "\n",
+    "\n",
+    "###\n",
+    "\n",
+    "\n",
+    "\n",
+    "# This function counts the number of detected objects of a specific class\n",
+    "# within the results of a YOLO inference.\n",
+    "def get_target_class_count(results, target_class_name):\n",
+    "\n",
+    "\n",
+    "    # counter for the target class\n",
+    "    target_class_count = 0\n",
+    "\n",
+    "    # Iterate through the detected objects in the results\n",
+    "    for box in results[0].boxes:\n",
+    "        # Access the class ID for the current detection\n",
+    "        class_id = int(box.cls[0])\n",
+    "\n",
+    "        # Access the class name from the model's class names list\n",
+    "        # model.names is a dictionary mapping class IDs to class names\n",
+    "        detected_class_name = model.names[class_id]\n",
+    "\n",
+    "        # Check if the detected class name matches the target class name\n",
+    "        if detected_class_name == target_class_name:\n",
+    "            target_class_count += 1\n",
+    "\n",
+    "    return target_class_count\n",
+    "\n",
+    "@app.post(\"/count_cars/\")\n",
+    "async def count_cars_endpoint(file: UploadFile = File(...)):\n",
+    "    \"\"\"\n",
+    "    Receives an image file, performs YOLO inference to count cars,\n",
+    "    and returns the number of detected cars.\n",
+    "    \"\"\"\n",
+    "    try:\n",
+    "      # Read the image file\n",
+    "      image_data = await file.read()\n",
+    "      image = Image.open(io.BytesIO(image_data))\n",
+    "\n",
+    "      # Perform inference on the uploaded image\n",
+    "      # model is loaded in the setup code\n",
+    "      results = model(image)\n",
+    "\n",
+    "      # Get the count of cars (occupied spaces)\n",
+    "      car_count = get_target_class_count(results, 'space-occupied')\n",
+    "\n",
+    "      return {\"car_count\": car_count}\n",
+    "    except Exception as e:\n",
+    "      return {\"error\": str(e)}\n",
+    "\n",
+    "\n",
+    "# Start the FastAPI server using ngrok for external access\n",
+    "nest_asyncio.apply()\n",
+    "print(\"Starting ngrok tunnel...\")\n",
+    "# Make sure you have ngrok installed and authenticated if needed\n",
+    "# You might need to replace '8000' if you change the uvicorn port\n",
+    "ngrok.set_auth_token(\"auth_token\")\n",
+    "static_domain='nationally-cheerful-pegasus.ngrok-free.app'\n",
+    "public_url = ngrok.connect(8000, domain=static_domain).public_url\n",
+    "print(f\"FastAPI app exposed at: {public_url}\")\n",
+    "\n",
+    "# Run the uvicorn server\n",
+    "uvicorn.run(app, host=\"0.0.0.0\", port=8000)\n",
+    "\n",
+    "# Keep the cell running to maintain the server and ngrok tunnel\n",
+    "# You can stop the cell execution to stop the server and tunnel\n",
+    "# ngrok.kill() # Use this in another cell if you need to kill the tunnel manually\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "id": "WUsFZN4f9Zah"
+   },
+   "outputs": [],
+   "source": [
+    "print(app.routes)"
+   ]
+  }
+ ],
+ "metadata": {
+  "accelerator": "GPU",
+  "colab": {
+   "gpuType": "T4",
+   "provenance": []
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 0
+}
